@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { PAD_COUNT, useSimonPattern } from "./use-simon-pattern";
 
@@ -9,6 +11,11 @@ const PAD_LABELS = ["Red", "Blue", "Green", "Yellow"];
 
 export function SimonPatternGame() {
   const { phase, activePad, level, bestLevel, tapPad, start } = useSimonPattern();
+
+  useEffect(() => {
+    if (phase === "gameover") trackEvent("game_complete", { game_id: "simon-pattern", level_reached: level });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when phase flips to gameover
+  }, [phase]);
 
   return (
     <div className="flex flex-col items-center gap-5">

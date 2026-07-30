@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { useProgressStore } from "@/store/progress-store";
 import { useSettingsStore } from "@/store/settings-store";
 import { LANGUAGE_LABELS } from "@/types/settings";
@@ -57,7 +58,14 @@ export function SettingsPanel() {
         icon={<Globe className="size-5" />}
         label="Language"
         control={
-          <Button type="button" variant="outline" onClick={cycleLanguage}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              cycleLanguage();
+              trackEvent("language_change");
+            }}
+          >
             {LANGUAGE_LABELS[language]}
           </Button>
         }
@@ -99,6 +107,7 @@ export function SettingsPanel() {
               variant="destructive"
               onClick={() => {
                 resetProgress();
+                trackEvent("reset_progress");
                 setConfirmOpen(false);
               }}
             >

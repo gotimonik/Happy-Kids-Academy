@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfettiOverlay } from "@/components/shared/confetti-overlay";
 import { FeedbackToast } from "@/components/shared/feedback-toast";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { useSoundSafari } from "./use-sound-safari";
 
@@ -11,6 +13,13 @@ const ACCENT = "#00B894";
 
 export function SoundSafariGame() {
   const { round, totalRounds, score, current, status, answer, replay, restart } = useSoundSafari();
+
+  useEffect(() => {
+    if (status === "finished") {
+      trackEvent("game_complete", { game_id: "sound-safari", score, total_rounds: totalRounds });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when status flips to finished
+  }, [status]);
 
   if (status === "finished") {
     return (

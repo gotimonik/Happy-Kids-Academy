@@ -1,11 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { useMemoryGame } from "./use-memory-game";
 
 export function MemoryGame() {
   const { deck, flipped, matchedPairs, moves, isComplete, flip, reset } = useMemoryGame();
+
+  useEffect(() => {
+    if (isComplete) trackEvent("game_complete", { game_id: "memory", moves });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when isComplete flips true, not on every `moves` change
+  }, [isComplete]);
 
   return (
     <div className="flex flex-col gap-4">

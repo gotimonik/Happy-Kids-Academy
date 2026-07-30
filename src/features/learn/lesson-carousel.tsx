@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { useProgressStore } from "@/store/progress-store";
 import type { LearningCategory } from "@/types/category";
 import { FlashCard } from "./flash-card";
@@ -25,9 +26,10 @@ export function LessonCarousel({
       setIndex((i) => i + 1);
     } else {
       incrementLessonsCompleted();
+      trackEvent("lesson_complete", { category: category.slug, items_count: total });
       onFinish();
     }
-  }, [index, total, incrementLessonsCompleted, onFinish]);
+  }, [index, total, incrementLessonsCompleted, onFinish, category.slug]);
 
   const goBack = useCallback(() => {
     setIndex((i) => Math.max(0, i - 1));

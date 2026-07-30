@@ -54,11 +54,15 @@ export function pickBestVoice(locale: string): SpeechSynthesisVoice | undefined 
   const voices = cachedVoices.length > 0 ? cachedVoices : loadVoicesSync();
   if (voices.length === 0) return undefined;
 
-  const targetLang = locale.toLowerCase();
+  const normalize = (lang: string) => lang.toLowerCase().replace(/_/g, "-");
+  const targetLang = normalize(locale);
   const targetPrimary = targetLang.split("-")[0];
 
-  const exactMatches = voices.filter((v) => v.lang.toLowerCase() === targetLang);
-  const primaryMatches = voices.filter((v) => v.lang.toLowerCase().startsWith(`${targetPrimary}-`) || v.lang.toLowerCase() === targetPrimary);
+  const exactMatches = voices.filter((v) => normalize(v.lang) === targetLang);
+  const primaryMatches = voices.filter((v) => {
+    const voiceLang = normalize(v.lang);
+    return voiceLang.startsWith(`${targetPrimary}-`) || voiceLang === targetPrimary;
+  });
   const candidates = exactMatches.length > 0 ? exactMatches : primaryMatches;
 
   if (candidates.length === 0) return undefined;

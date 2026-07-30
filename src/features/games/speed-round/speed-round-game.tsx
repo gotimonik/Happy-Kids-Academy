@@ -8,6 +8,7 @@ import { OptionButton } from "@/features/quiz/option-button";
 import { QuestionCard } from "@/features/quiz/question-card";
 import { categories } from "@/data/categories";
 import { createMixedQuestion } from "@/lib/quiz/generators";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/store/progress-store";
 import { useSpeedRound } from "./use-speed-round";
@@ -18,7 +19,10 @@ export function SpeedRoundGame() {
   const addCoins = useProgressStore((state) => state.addCoins);
   const { question, score, answered, timeLeft, durationSeconds, status, answer, restart } = useSpeedRound({
     generateQuestion: () => createMixedQuestion(categories),
-    onFinish: (finalScore) => addCoins(finalScore * 2),
+    onFinish: (finalScore) => {
+      addCoins(finalScore * 2);
+      trackEvent("game_complete", { game_id: "speed-round", score: finalScore, answered });
+    },
   });
 
   const isLowTime = timeLeft <= 10;

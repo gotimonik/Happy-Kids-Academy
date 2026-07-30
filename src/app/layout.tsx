@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
+import { Suspense } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AppShell } from "@/components/shared/app-shell";
+import { GoogleAnalytics } from "@/components/shared/google-analytics";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import { SessionTimeTracker } from "@/components/shared/session-time-tracker";
 import "./globals.css";
@@ -92,6 +94,9 @@ export default function RootLayout({
           </a>
           <SessionTimeTracker />
           <PwaRegister />
+          <Suspense fallback={null}>
+            <GoogleAnalytics />
+          </Suspense>
           <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>

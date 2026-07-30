@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FeedbackToast } from "@/components/shared/feedback-toast";
+import { trackEvent } from "@/lib/analytics/track-event";
 import type { QuizQuestion, QuizResult } from "@/types/quiz";
 import { CelebrateScreen } from "./celebrate-screen";
 import { OptionButton } from "./option-button";
@@ -35,6 +36,12 @@ export function QuizSession({
     totalRounds,
     onFinish: (quizResult) => {
       setResult(quizResult);
+      trackEvent("quiz_complete", {
+        quiz_title: title,
+        score: quizResult.score,
+        total_rounds: quizResult.totalRounds,
+        stars_earned: quizResult.starsEarned,
+      });
       onQuizFinish?.(quizResult);
     },
   });

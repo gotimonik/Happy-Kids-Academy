@@ -1,11 +1,17 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { usePuzzleGame } from "./use-puzzle-game";
 
 export function PuzzleGame() {
   const { tiles, next, wrongTile, isComplete, select, reset } = usePuzzleGame();
+
+  useEffect(() => {
+    if (isComplete) trackEvent("game_complete", { game_id: "puzzle" });
+  }, [isComplete]);
 
   return (
     <div className="flex flex-col gap-4">

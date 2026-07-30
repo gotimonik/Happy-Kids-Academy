@@ -1,12 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { useSortingGame } from "./use-sorting-game";
 
 export function SortingGame() {
   const { items, selectedId, sorted, wrongBucket, isComplete, selectItem, dropInBucket, reset } =
     useSortingGame();
+
+  useEffect(() => {
+    if (isComplete) trackEvent("game_complete", { game_id: "sorting" });
+  }, [isComplete]);
 
   return (
     <div className="flex flex-col gap-5">

@@ -15,6 +15,10 @@ const STATIC_ROUTES = [
   "/study-coach/treasure-hunt",
   "/study-coach/daily-routine",
   "/settings",
+  "/privacy-policy",
+  "/terms",
+  "/disclaimer",
+  "/accessibility",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
