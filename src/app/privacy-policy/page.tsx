@@ -68,8 +68,7 @@ export default function PrivacyPolicyPage() {
           <p>
             We&apos;ve turned off Google Signals and ad-personalization signals for this site, so
             analytics data is never used for advertising or combined with other Google account
-            activity. If your browser sends a Global Privacy Control or &quot;Do Not Track&quot;
-            signal, or if you use an ad/tracker blocker, analytics simply won&apos;t load — the app
+            activity. Some browser ad/tracker blockers may prevent analytics from loading — the app
             works exactly the same either way.
           </p>
           <p>
@@ -85,8 +84,9 @@ export default function PrivacyPolicyPage() {
           <h2>Children&apos;s privacy</h2>
           <p>
             This app is designed for young children and is built specifically to avoid collecting any
-            personal information from any user, child or adult. Because no data is collected in the
-            first place, there is nothing to store, share, or protect off-device.
+            personal information from any user, child or adult. The only data collected is anonymous
+            aggregate usage analytics (see above) — never a name, contact detail, photo, or anything
+            that identifies a specific child.
           </p>
         </section>
 

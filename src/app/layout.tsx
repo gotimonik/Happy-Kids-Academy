@@ -20,7 +20,7 @@ const nunito = Nunito({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://happykidsacademy.example.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://happykidsacademy.playfantacy.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -2,21 +2,8 @@
 
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics/config";
-
-/** Reads the browser's Do Not Track / Global Privacy Control signal, if any. */
-function hasDoNotTrackSignal(): boolean {
-  const nav = navigator as Navigator & { msDoNotTrack?: string; globalPrivacyControl?: boolean };
-  const win = window as Window & { doNotTrack?: string };
-  return (
-    win.doNotTrack === "1" ||
-    nav.doNotTrack === "1" ||
-    nav.doNotTrack === "yes" ||
-    nav.msDoNotTrack === "1" ||
-    nav.globalPrivacyControl === true
-  );
-}
 
 /**
  * Google Analytics 4 (gtag.js), wired for the App Router.
@@ -35,18 +22,9 @@ export function GoogleAnalytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isFirstLoad = useRef(true);
-  const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
-    // Reading navigator/window signals is an environment check, not something
-    // derivable during render, so it's resolved post-mount like the rest of
-    // this app's browser-feature checks.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShouldLoad(Boolean(GA_MEASUREMENT_ID) && !hasDoNotTrackSignal());
-  }, []);
-
-  useEffect(() => {
-    if (!shouldLoad || typeof window.gtag !== "function") return;
+    if (!GA_MEASUREMENT_ID || typeof window.gtag !== "function") return;
 
     // The initial page_view is already sent by the bootstrap `gtag('config', ...)`
     // call below, so skip re-sending it the moment this effect first runs.
@@ -63,9 +41,9 @@ export function GoogleAnalytics() {
       page_location: window.location.href,
       page_title: document.title,
     });
-  }, [pathname, searchParams, shouldLoad]);
+  }, [pathname, searchParams]);
 
-  if (!shouldLoad) return null;
+  if (!GA_MEASUREMENT_ID) return null;
 
   return (
     <>

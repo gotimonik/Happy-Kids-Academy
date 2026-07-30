@@ -33,7 +33,3 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# service worker (generated)
-/public/sw.js
-/public/workbox-*.js

@@ -1,6 +1,6 @@
 import type { BreadcrumbItem } from "@/components/shared/breadcrumbs";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://happykidsacademy.example.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://happykidsacademy.playfantacy.com";
 const SITE_NAME = "Happy Kids Academy";
 
 /** `WebSite` structured data, rendered once on the root layout/home page. */
