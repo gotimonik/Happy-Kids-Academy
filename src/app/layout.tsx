@@ -43,7 +43,11 @@ export const metadata: Metadata = {
   applicationName: "Happy Kids Academy",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icons/icon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
     apple: "/icons/apple-touch-icon.png",
   },
   openGraph: {

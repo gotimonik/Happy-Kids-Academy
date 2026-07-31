@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { getAllCategorySlugs, getCategory } from "@/data/categories";
 import { GAME_REGISTRY } from "@/features/games/game-registry";
 
+export const dynamic = "force-static";
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://happykidsacademy.playfantacy.com";
 
 const STATIC_ROUTES = [

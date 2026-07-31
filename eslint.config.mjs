@@ -5,7 +5,16 @@ const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
   {
-    ignores: [".next/**", "node_modules/**", "public/sw.js", "public/workbox-*.js"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "public/sw.js",
+      "public/workbox-*.js",
+      // Native Capacitor project + its bundled copy of the static export —
+      // generated/vendored output, not source to lint.
+      "android/**",
+      "out/**",
+    ],
   },
 ];
 

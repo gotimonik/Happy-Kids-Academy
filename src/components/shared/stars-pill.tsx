@@ -10,12 +10,14 @@ export function StarsPill({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm",
+        "flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-white/20 px-2.5 py-1.5 text-xs font-bold text-white backdrop-blur-sm sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm",
         className,
       )}
     >
-      <Star className="size-4 fill-current" aria-hidden="true" />
-      <span aria-live="polite">{totalStars} stars</span>
+      <Star className="size-3.5 shrink-0 fill-current sm:size-4" aria-hidden="true" />
+      <span aria-live="polite">
+        {totalStars} <span className="hidden sm:inline">stars</span>
+      </span>
     </div>
   );
 }

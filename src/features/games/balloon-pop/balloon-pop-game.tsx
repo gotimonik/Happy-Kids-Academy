@@ -16,7 +16,7 @@ export function BalloonPopGame() {
       </div>
 
       <div
-        className="relative h-[28rem] overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-sky-100 to-sky-50 dark:from-slate-800 dark:to-slate-900"
+        className="relative h-[28rem] @container overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-sky-100 to-sky-50 dark:from-slate-800 dark:to-slate-900"
         aria-label="Balloon pop play area"
       >
         {balloons.map((balloon) => (
@@ -25,7 +25,7 @@ export function BalloonPopGame() {
             type="button"
             onClick={() => pop(balloon.id)}
             aria-label={`Balloon with the letter ${balloon.letter}`}
-            className="absolute flex size-16 -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full text-2xl font-black text-white shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-95"
+            className="absolute flex size-[clamp(2.75rem,9cqw,4rem)] -translate-x-1/2 translate-y-1/2 items-center justify-center rounded-full text-[clamp(1rem,3.5cqw,1.5rem)] font-black text-white shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-95"
             style={{
               left: `${balloon.x}%`,
               top: `${balloon.y}%`,
