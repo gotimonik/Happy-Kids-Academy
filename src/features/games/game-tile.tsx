@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { StaticLink as Link } from "@/components/shared/static-link";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 import type { GameDefinition } from "@/types/game";
 

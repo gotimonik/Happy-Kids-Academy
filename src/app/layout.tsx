@@ -3,6 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AppShell } from "@/components/shared/app-shell";
+import { SplashScreenHandler } from "@/components/shared/splash-screen-handler";
 import { GoogleAnalytics } from "@/components/shared/google-analytics";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import { SessionTimeTracker } from "@/components/shared/session-time-tracker";
@@ -90,6 +91,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <SplashScreenHandler />
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"

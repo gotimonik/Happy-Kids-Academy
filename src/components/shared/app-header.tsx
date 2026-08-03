@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { StaticLink as Link } from "./static-link";
 import { StarsPill } from "./stars-pill";
 import { ThemeToggle } from "./theme-toggle";
 

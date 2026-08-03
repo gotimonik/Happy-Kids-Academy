@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Star } from "lucide-react";
+import { StaticLink as Link } from "@/components/shared/static-link";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 import type { LearningCategory } from "@/types/category";
 import { useProgressStore } from "@/store/progress-store";

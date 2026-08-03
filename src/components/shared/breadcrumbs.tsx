@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { ChevronRight } from "lucide-react";
+import { StaticLink as Link } from "./static-link";
 
 export interface BreadcrumbItem {
   readonly label: string;

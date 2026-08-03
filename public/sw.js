@@ -1,4 +1,4 @@
-const CACHE_NAME = "hka-cache-v1";
+const CACHE_NAME = "hka-cache-v2";
 const OFFLINE_URL = "/offline";
 const PRECACHE_URLS = ["/", OFFLINE_URL, "/manifest.webmanifest", "/icons/icon.svg"];
 

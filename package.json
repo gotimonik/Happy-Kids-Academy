@@ -5,11 +5,11 @@
   "packageManager": "pnpm@11.18.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/alias-next-rsc-assets.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "cap:sync": "next build && npx cap sync android",
+    "cap:sync": "npm run build && npx cap sync android",
     "cap:open:android": "npx cap open android"
   },
   "dependencies": {

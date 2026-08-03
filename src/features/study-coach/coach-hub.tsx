@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { MapPin, RefreshCw, Target, Timer } from "lucide-react";
+import { StaticLink as Link } from "@/components/shared/static-link";
 import { cn } from "@/lib/utils";
 import { COACH_GAMES, type CoachGrade } from "@/lib/study-coach/guide-content";
 import { useStudyCoachStore } from "@/store/study-coach-store";

@@ -3,78 +3,126 @@
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let loadPromise: Promise<SpeechSynthesisVoice[]> | null = null;
 
-/**
- * Resolves once the browser has reported its installed speech-synthesis voices.
- * Chrome/Edge load voices asynchronously, so the first call to `getVoices()`
- * often returns an empty array — this waits for the `voiceschanged` event
- * (with a timeout fallback) so voice selection has something to work with.
- */
-function loadVoices(): Promise<SpeechSynthesisVoice[]> {
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function waitForVoices(
+  maxAttempts = 20,
+  interval = 250
+): Promise<SpeechSynthesisVoice[]> {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    return Promise.resolve([]);
+    return [];
   }
 
-  const existing = window.speechSynthesis.getVoices();
-  if (existing.length > 0) {
-    cachedVoices = existing;
-    return Promise.resolve(existing);
+  for (let i = 0; i < maxAttempts; i++) {
+    const voices = window.speechSynthesis.getVoices();
+
+    if (voices.length > 0) {
+      cachedVoices = voices;
+      return voices;
+    }
+
+    await sleep(interval);
   }
 
-  if (loadPromise) return loadPromise;
-
-  loadPromise = new Promise((resolve) => {
-    const handleVoicesChanged = () => {
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0) {
-        cachedVoices = voices;
-        window.speechSynthesis.removeEventListener("voiceschanged", handleVoicesChanged);
-        resolve(voices);
-      }
-    };
-    window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
-    // Safety net for browsers that never fire `voiceschanged`.
-    setTimeout(() => resolve(window.speechSynthesis.getVoices()), 1000);
-  });
-
-  return loadPromise;
+  return [];
 }
 
-/** Fires the async voice load early (e.g. on app mount) so it's warm by the first `speak()` call. */
+export async function loadVoices(): Promise<SpeechSynthesisVoice[]> {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return [];
+  }
+
+  if (cachedVoices.length > 0) {
+    return cachedVoices;
+  }
+
+  if (loadPromise) {
+    return loadPromise;
+  }
+
+  loadPromise = waitForVoices();
+
+  const voices = await loadPromise;
+
+  cachedVoices = voices;
+  loadPromise = null;
+
+  return voices;
+}
+
 export function primeVoiceCatalog(): void {
   void loadVoices();
 }
 
-/**
- * Picks the clearest available voice for a BCP-47 locale. Prefers voices whose
- * name suggests a higher-quality neural/natural engine (Chrome's "Google" voices,
- * Edge's "Natural" voices, Safari's "Enhanced"/"Premium" voices) over default
- * robotic system voices, and falls back gracefully when none match.
- */
-export function pickBestVoice(locale: string): SpeechSynthesisVoice | undefined {
-  const voices = cachedVoices.length > 0 ? cachedVoices : loadVoicesSync();
-  if (voices.length === 0) return undefined;
+export async function pickBestVoice(
+  locale: string
+): Promise<SpeechSynthesisVoice | undefined> {
+  const voices =
+    cachedVoices.length > 0 ? cachedVoices : await loadVoices();
 
-  const normalize = (lang: string) => lang.toLowerCase().replace(/_/g, "-");
-  const targetLang = normalize(locale);
-  const targetPrimary = targetLang.split("-")[0];
+  if (voices.length === 0) {
+    return undefined;
+  }
 
-  const exactMatches = voices.filter((v) => normalize(v.lang) === targetLang);
-  const primaryMatches = voices.filter((v) => {
-    const voiceLang = normalize(v.lang);
-    return voiceLang.startsWith(`${targetPrimary}-`) || voiceLang === targetPrimary;
+  const normalize = (lang: string) =>
+    lang.toLowerCase().replace(/_/g, "-");
+
+  const target = normalize(locale);
+  const primary = target.split("-")[0];
+
+  const exact = voices.filter(
+    (v) => normalize(v.lang) === target
+  );
+
+  const partial = voices.filter((v) => {
+    const lang = normalize(v.lang);
+    return lang === primary || lang.startsWith(primary + "-");
   });
-  const candidates = exactMatches.length > 0 ? exactMatches : primaryMatches;
 
-  if (candidates.length === 0) return undefined;
+  const candidates = exact.length ? exact : partial;
 
-  const qualityPattern = /google|natural|neural|enhanced|premium/i;
-  const highQuality = candidates.find((v) => qualityPattern.test(v.name));
-  return highQuality ?? candidates[0];
+  if (!candidates.length) {
+    return undefined;
+  }
+
+  const qualityPattern =
+    /google|natural|neural|enhanced|premium/i;
+
+  return (
+    candidates.find((v) => qualityPattern.test(v.name)) ??
+    candidates.find((v) => v.default) ??
+    candidates[0]
+  );
 }
 
-function loadVoicesSync(): SpeechSynthesisVoice[] {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length > 0) cachedVoices = voices;
-  return voices;
+export async function speak(
+  text: string,
+  locale = "en-US"
+): Promise<void> {
+  if (
+    typeof window === "undefined" ||
+    !("speechSynthesis" in window)
+  ) {
+    return;
+  }
+
+  const synth = window.speechSynthesis;
+
+  synth.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  utterance.lang = locale;
+
+  const voice = await pickBestVoice(locale);
+
+  if (voice) {
+    utterance.voice = voice;
+  }
+
+  utterance.rate = 0.95;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  synth.speak(utterance);
 }

@@ -20,11 +20,11 @@ const config: CapacitorConfig = {
     // a fixed short duration (rather than manual JS-driven hide()) is all
     // that's needed — it just gives the brand a beat to register.
     SplashScreen: {
-      launchShowDuration: 1200,
-      launchAutoHide: true,
+      launchShowDuration: 0,
+      launchAutoHide: false,
       backgroundColor: "#FFF8EEFF",
       androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP",
+      androidScaleType: "FIT_CENTER",
       showSpinner: false,
     },
   },

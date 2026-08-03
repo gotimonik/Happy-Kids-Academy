@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
+import { StaticLink as Link } from "@/components/shared/static-link";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 
 export function SpecialTile({

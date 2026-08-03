@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
+import { StaticLink as Link } from "./static-link";
 
 export function BottomNav() {
   const pathname = usePathname();

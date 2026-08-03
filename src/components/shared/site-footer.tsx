@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { StaticLink as Link } from "./static-link";
 
 const FOOTER_LINKS = [
   { href: "/privacy-policy", label: "Privacy Policy" },

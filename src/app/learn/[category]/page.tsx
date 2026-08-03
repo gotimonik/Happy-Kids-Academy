@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookOpen, PenLine, Target } from "lucide-react";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { JsonLd } from "@/components/shared/json-ld";
 import { PageContainer } from "@/components/shared/page-container";
+import { StaticLink as Link } from "@/components/shared/static-link";
 import { getAllCategorySlugs, getCategory } from "@/data/categories";
 import { breadcrumbJsonLd, learningResourceJsonLd } from "@/lib/seo/json-ld";
 
