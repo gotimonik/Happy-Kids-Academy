@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfettiOverlay } from "@/components/shared/confetti-overlay";
 import { FeedbackToast } from "@/components/shared/feedback-toast";
-import { OptionButton } from "@/features/quiz/option-button";
+import { OptionButton, type OptionState } from "@/features/quiz/option-button";
 import { QuestionCard } from "@/features/quiz/question-card";
 import { categories } from "@/data/categories";
 import { createMixedQuestion } from "@/lib/quiz/generators";
@@ -17,6 +18,7 @@ const ACCENT = "#EE6352";
 
 export function SpeedRoundGame() {
   const addCoins = useProgressStore((state) => state.addCoins);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const { question, score, answered, timeLeft, durationSeconds, status, answer, restart } = useSpeedRound({
     generateQuestion: () => createMixedQuestion(categories),
     onFinish: (finalScore) => {
@@ -24,6 +26,16 @@ export function SpeedRoundGame() {
       trackEvent("game_complete", { game_id: "speed-round", score: finalScore, answered });
     },
   });
+
+  // A new `question` arrives each round (including the first) — clear the
+  // previous pick so old answer highlighting doesn't linger. Adjusted during
+  // render rather than in an effect (React's recommended pattern for
+  // resetting state when a prop changes) to avoid an extra render pass.
+  const [prevQuestion, setPrevQuestion] = useState(question);
+  if (prevQuestion !== question) {
+    setPrevQuestion(question);
+    setSelectedOption(null);
+  }
 
   const isLowTime = timeLeft <= 10;
 
@@ -53,6 +65,13 @@ export function SpeedRoundGame() {
     );
   }
 
+  function optionState(option: string): OptionState {
+    if (status === "answering") return "idle";
+    if (option === question?.correctAnswer) return "correct";
+    if (option === selectedOption) return "incorrect";
+    return "dim";
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between text-sm font-bold">
@@ -76,15 +95,20 @@ export function SpeedRoundGame() {
         />
       </div>
 
-      <QuestionCard prompt={question.prompt} />
+      <QuestionCard key={answered} prompt={question.prompt} accentColor={ACCENT} />
       <div className="flex flex-col gap-3">
-        {question.options.map((option) => (
+        {question.options.map((option, index) => (
           <OptionButton
-            key={option}
+            key={`${answered}-${option}`}
             label={option}
+            index={index}
             accentColor={ACCENT}
+            state={optionState(option)}
             disabled={status !== "answering"}
-            onSelect={() => answer(option)}
+            onSelect={() => {
+              setSelectedOption(option);
+              answer(option);
+            }}
           />
         ))}
       </div>

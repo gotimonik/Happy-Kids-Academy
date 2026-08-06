@@ -2,13 +2,21 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { INITIAL_SETTINGS, type AppLanguage, type SettingsState } from "@/types/settings";
+import {
+  INITIAL_SETTINGS,
+  type AlphabetCase,
+  type AppLanguage,
+  type NumberScript,
+  type SettingsState,
+} from "@/types/settings";
 
 interface SettingsActions {
   setLanguage: (language: AppLanguage) => void;
   cycleLanguage: () => void;
   toggleVoice: () => void;
   toggleMusic: () => void;
+  setAlphabetCase: (mode: AlphabetCase) => void;
+  setNumberScript: (script: NumberScript) => void;
 }
 
 export type SettingsStore = SettingsState & SettingsActions;
@@ -28,6 +36,8 @@ export const useSettingsStore = create<SettingsStore>()(
         }),
       toggleVoice: () => set((state) => ({ voiceOn: !state.voiceOn })),
       toggleMusic: () => set((state) => ({ musicOn: !state.musicOn })),
+      setAlphabetCase: (mode) => set(() => ({ alphabetCase: mode })),
+      setNumberScript: (script) => set(() => ({ numberScript: script })),
     }),
     { name: "hka-settings" },
   ),

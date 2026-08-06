@@ -6,7 +6,7 @@ import { FeedbackToast } from "@/components/shared/feedback-toast";
 import { trackEvent } from "@/lib/analytics/track-event";
 import type { QuizQuestion, QuizResult } from "@/types/quiz";
 import { CelebrateScreen } from "./celebrate-screen";
-import { OptionButton } from "./option-button";
+import { OptionButton, type OptionState } from "./option-button";
 import { QuestionCard } from "./question-card";
 import { QuizProgressHeader } from "./quiz-progress-header";
 import { useQuizEngine } from "./use-quiz-engine";
@@ -30,6 +30,7 @@ export function QuizSession({
 }: QuizSessionProps) {
   const router = useRouter();
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   const { question, round, score, status, feedbackMessage, answer, restart } = useQuizEngine({
     generateQuestion,
@@ -45,6 +46,16 @@ export function QuizSession({
       onQuizFinish?.(quizResult);
     },
   });
+
+  // A new `question` object arrives each round (including the first) — clear
+  // the previous pick so old answer highlighting doesn't linger. Adjusted
+  // during render rather than in an effect (React's recommended pattern for
+  // resetting state when a prop changes) to avoid an extra render pass.
+  const [prevQuestion, setPrevQuestion] = useState(question);
+  if (prevQuestion !== question) {
+    setPrevQuestion(question);
+    setSelectedOption(null);
+  }
 
   if (result) {
     return (
@@ -69,19 +80,31 @@ export function QuizSession({
     );
   }
 
+  function optionState(option: string): OptionState {
+    if (status === "answering") return "idle";
+    if (option === question?.correctAnswer) return "correct";
+    if (option === selectedOption) return "incorrect";
+    return "dim";
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="sr-only">{title}</h1>
       <QuizProgressHeader round={round} totalRounds={totalRounds} score={score} accentColor={accentColor} />
-      <QuestionCard prompt={question.prompt} />
+      <QuestionCard key={round} prompt={question.prompt} accentColor={accentColor} />
       <div className="flex flex-col gap-3">
-        {question.options.map((option) => (
+        {question.options.map((option, index) => (
           <OptionButton
-            key={option}
+            key={`${round}-${option}`}
             label={option}
+            index={index}
             accentColor={accentColor}
+            state={optionState(option)}
             disabled={status !== "answering"}
-            onSelect={() => answer(option)}
+            onSelect={() => {
+              setSelectedOption(option);
+              answer(option);
+            }}
           />
         ))}
       </div>

@@ -3,13 +3,15 @@
 import { useMemo, useRef, useState } from "react";
 import { Eraser, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDisplayCategory } from "@/lib/categories/use-display-category";
 import type { LearningCategory } from "@/types/category";
 import { TraceCanvas, type TraceCanvasHandle } from "./trace-canvas";
 
 export function PracticePageClient({ category }: { category: LearningCategory }) {
+  const displayCategory = useDisplayCategory(category);
   const guides = useMemo(
-    () => category.items.filter((item) => Boolean(item.symbol)),
-    [category.items],
+    () => displayCategory.items.filter((item) => Boolean(item.symbol)),
+    [displayCategory.items],
   );
   const [index, setIndex] = useState(0);
   const canvasRef = useRef<TraceCanvasHandle | null>(null);

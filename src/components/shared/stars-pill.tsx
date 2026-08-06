@@ -1,11 +1,13 @@
 "use client";
 
 import { Star } from "lucide-react";
+import { useStoreHydrated } from "@/lib/use-store-hydrated";
 import { cn } from "@/lib/utils";
 import { selectTotalStars, useProgressStore } from "@/store/progress-store";
 
 export function StarsPill({ className }: { className?: string }) {
   const totalStars = useProgressStore(selectTotalStars);
+  const hydrated = useStoreHydrated(useProgressStore);
 
   return (
     <div
@@ -15,9 +17,13 @@ export function StarsPill({ className }: { className?: string }) {
       )}
     >
       <Star className="size-3.5 shrink-0 fill-current sm:size-4" aria-hidden="true" />
-      <span aria-live="polite">
-        {totalStars} <span className="hidden sm:inline">stars</span>
-      </span>
+      {hydrated ? (
+        <span aria-live="polite">
+          {totalStars} <span className="hidden sm:inline">stars</span>
+        </span>
+      ) : (
+        <span className="inline-block h-3.5 w-5 animate-pulse rounded-full bg-white/40" aria-hidden="true" />
+      )}
     </div>
   );
 }

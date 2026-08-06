@@ -1,10 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 
 interface UseTracePadOptions {
   readonly guideText: string;
   readonly strokeColor: string;
+}
+
+const GUIDE_OPACITY = 0.22;
+
+/** Turns a computed `rgb(...)`/`rgba(...)` color string into one with a new alpha. */
+function withAlpha(color: string, alpha: number): string {
+  const channels = color.match(/[\d.]+/g);
+  if (!channels || channels.length < 3) return color;
+  const [r, g, b] = channels;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 /**
@@ -16,6 +27,9 @@ export function useTracePad({ guideText, strokeColor }: UseTracePadOptions) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDrawingRef = useRef(false);
+  // Only used to trigger a redraw when the user toggles light/dark mode —
+  // the actual color comes from the container's computed style below.
+  const { resolvedTheme } = useTheme();
 
   const drawGuide = useCallback(() => {
     const canvas = canvasRef.current;
@@ -34,8 +48,22 @@ export function useTracePad({ guideText, strokeColor }: UseTracePadOptions) {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = "#00000014";
-    ctx.font = `bold ${Math.min(width, height) * 0.65}px var(--font-baloo), sans-serif`;
+    // Canvas2D's `font` setter parses a plain CSS font string — it does not
+    // resolve custom properties the way normal cascaded CSS does, so handing
+    // it "var(--font-baloo)" literally fails silently and canvas falls back
+    // to its 10px default, rendering the guide glyph almost invisibly small.
+    // Read the variable's raw value (next/font's generated font-family list)
+    // straight off the body instead, where it's applied via className.
+    const guideFont =
+      getComputedStyle(document.body).getPropertyValue("--font-baloo").trim() || "sans-serif";
+
+    // A fixed low-opacity black guide disappears entirely against a dark
+    // card background. Derive the guide color from the current (inherited)
+    // foreground color instead, so it stays visible in both themes.
+    const foreground = getComputedStyle(container).color;
+
+    ctx.fillStyle = withAlpha(foreground, GUIDE_OPACITY);
+    ctx.font = `bold ${Math.min(width, height) * 0.65}px ${guideFont}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(guideText, width / 2, height / 2);
@@ -44,7 +72,7 @@ export function useTracePad({ guideText, strokeColor }: UseTracePadOptions) {
     ctx.lineWidth = 10;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-  }, [guideText, strokeColor]);
+  }, [guideText, strokeColor, resolvedTheme]);
 
   useEffect(() => {
     drawGuide();

@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { AnimatedBackground } from "@/components/shared/animated-background";
 import { AppShell } from "@/components/shared/app-shell";
+import { BackButtonHandler } from "@/components/shared/back-button-handler";
 import { SplashScreenHandler } from "@/components/shared/splash-screen-handler";
 import { GoogleAnalytics } from "@/components/shared/google-analytics";
 import { PwaRegister } from "@/components/shared/pwa-register";
@@ -84,14 +86,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${baloo.variable} ${nunito.variable} font-sans antialiased`}>
+      {/*
+        suppressHydrationWarning here too: some browser extensions (Grammarly,
+        password managers, etc.) inject attributes like `data-gr-ext-installed`
+        onto <body> before React hydrates. That's a harmless client-only
+        difference, not an app bug — see https://react.dev/link/hydration-mismatch.
+      */}
+      <body className={`${baloo.variable} ${nunito.variable} font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+          <AnimatedBackground />
           <SplashScreenHandler />
+          <BackButtonHandler />
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
