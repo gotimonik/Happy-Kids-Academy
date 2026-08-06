@@ -42,6 +42,47 @@ function toNativeStaticHref(href: string): string {
   return `${path}.html${suffix}`;
 }
 
+/** Strips the static-export `.html`/`index.html` suffix so paths compare like real routes. */
+function normalizePathname(pathname: string): string {
+  let path = pathname;
+  if (path.endsWith("/index.html")) {
+    path = path.slice(0, -"/index.html".length) || "/";
+  } else if (path.endsWith(".html")) {
+    path = path.slice(0, -".html".length);
+  }
+  if (path.length > 1 && path.endsWith("/")) {
+    path = path.slice(0, -1);
+  }
+  return path === "" ? "/" : path;
+}
+
+/**
+ * True when `href` points at the page currently on screen (same path, query,
+ * and hash). Every in-app navigation here is a hard `window.location`
+ * navigation (see below), so clicking a link back to the current page — e.g.
+ * tapping the already-active tab in the bottom/side nav — would otherwise
+ * force a full reload for no reason: a visible flash and lost scroll/animation
+ * state. Treating it as a no-op instead matches how native app tab bars behave.
+ */
+function isCurrentLocation(href: string): boolean {
+  if (
+    href.startsWith("#") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:") ||
+    href.startsWith("http://") ||
+    href.startsWith("https://")
+  ) {
+    return false;
+  }
+
+  const target = new URL(href, window.location.href);
+  return (
+    normalizePathname(target.pathname) === normalizePathname(window.location.pathname) &&
+    target.search === window.location.search &&
+    target.hash === window.location.hash
+  );
+}
+
 export function StaticLink({
   href,
   children,
@@ -52,11 +93,16 @@ export function StaticLink({
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
 
-    if (
-      event.defaultPrevented ||
-      target === "_blank" ||
-      !Capacitor.isNativePlatform()
-    ) {
+    if (event.defaultPrevented || target === "_blank") {
+      return;
+    }
+
+    if (isCurrentLocation(href)) {
+      event.preventDefault();
+      return;
+    }
+
+    if (!Capacitor.isNativePlatform()) {
       return;
     }
 
