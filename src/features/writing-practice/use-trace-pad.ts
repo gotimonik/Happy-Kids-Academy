@@ -3,12 +3,25 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 
+export type DrawTool = "pencil" | "eraser";
+export type ToolSize = "small" | "medium" | "large";
+
 interface UseTracePadOptions {
   readonly guideText: string;
   readonly strokeColor: string;
+  /** "pencil" (default) draws in `strokeColor`; "eraser" removes whatever's underneath instead. */
+  readonly tool?: DrawTool;
+  /** Brush thickness preset — "medium" (default) matches the original fixed width. */
+  readonly size?: ToolSize;
 }
 
 const GUIDE_OPACITY = 0.22;
+
+// Eraser strokes are kept wider than the matching pencil size at every step —
+// a kid's fingertip is imprecise, and a thin eraser is frustrating to
+// actually catch a mistake with.
+const PENCIL_WIDTHS: Record<ToolSize, number> = { small: 5, medium: 10, large: 18 };
+const ERASER_WIDTHS: Record<ToolSize, number> = { small: 16, medium: 28, large: 42 };
 
 /** Turns a computed `rgb(...)`/`rgba(...)` color string into one with a new alpha. */
 function withAlpha(color: string, alpha: number): string {
@@ -22,14 +35,56 @@ function withAlpha(color: string, alpha: number): string {
  * Canvas-based freehand writing pad: draws a faint guide glyph, then lets the
  * child trace over it with mouse/touch/pen input. Replaces the Android app's
  * manual `Path` stroke list drawn inside a custom `View.onDraw`.
+ *
+ * Also reused (with `guideText=""`) as the free-draw canvas — there, picking
+ * a new pen color, switching to the eraser, or changing the brush size must
+ * NOT clear what's already drawn. Resizing the `<canvas>` element (via
+ * `drawGuide`, which also runs on mount and on a guide-text/theme change)
+ * implicitly wipes its contents *and* resets every other context property
+ * per the HTML canvas spec, so that path is kept strictly separate from
+ * color/tool/size changes — those only ever touch `ctx.strokeStyle` /
+ * `ctx.globalCompositeOperation` / `ctx.lineWidth` on the existing canvas,
+ * via refs that `drawGuide` also uses to restore the current pen after a
+ * real resize.
  */
-export function useTracePad({ guideText, strokeColor }: UseTracePadOptions) {
+export function useTracePad({
+  guideText,
+  strokeColor,
+  tool = "pencil",
+  size = "medium",
+}: UseTracePadOptions) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDrawingRef = useRef(false);
+  const strokeColorRef = useRef(strokeColor);
+  const toolRef = useRef(tool);
+  const sizeRef = useRef(size);
   // Only used to trigger a redraw when the user toggles light/dark mode —
   // the actual color comes from the container's computed style below.
   const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    strokeColorRef.current = strokeColor;
+  }, [strokeColor]);
+
+  useEffect(() => {
+    toolRef.current = tool;
+  }, [tool]);
+
+  useEffect(() => {
+    sizeRef.current = size;
+  }, [size]);
+
+  const applyToolStyle = useCallback(
+    (ctx: CanvasRenderingContext2D, activeTool: DrawTool, activeSize: ToolSize) => {
+      ctx.globalCompositeOperation = activeTool === "eraser" ? "destination-out" : "source-over";
+      ctx.lineWidth =
+        activeTool === "eraser" ? ERASER_WIDTHS[activeSize] : PENCIL_WIDTHS[activeSize];
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+    },
+    [],
+  );
 
   const drawGuide = useCallback(() => {
     const canvas = canvasRef.current;
@@ -68,17 +123,32 @@ export function useTracePad({ guideText, strokeColor }: UseTracePadOptions) {
     ctx.textBaseline = "middle";
     ctx.fillText(guideText, width / 2, height / 2);
 
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 10;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-  }, [guideText, strokeColor, resolvedTheme]);
+    // Resizing the canvas resets every context property (stroke color, line
+    // width, composite mode) to its default, so restore the current pen here.
+    ctx.strokeStyle = strokeColorRef.current;
+    applyToolStyle(ctx, toolRef.current, sizeRef.current);
+  }, [guideText, resolvedTheme, applyToolStyle]);
 
   useEffect(() => {
     drawGuide();
     window.addEventListener("resize", drawGuide);
     return () => window.removeEventListener("resize", drawGuide);
   }, [drawGuide]);
+
+  // Switching pen colors, the pencil/eraser tool, or the brush size updates
+  // only these properties on the *existing* canvas content — never clears or
+  // resizes it, so a drawing in progress keeps everything drawn so far.
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    ctx.strokeStyle = strokeColor;
+  }, [strokeColor]);
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    applyToolStyle(ctx, tool, size);
+  }, [tool, size, applyToolStyle]);
 
   const getContext = () => canvasRef.current?.getContext("2d") ?? null;
 

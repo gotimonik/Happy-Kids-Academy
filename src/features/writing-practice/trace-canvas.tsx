@@ -1,35 +1,36 @@
 "use client";
 
 import { forwardRef, useImperativeHandle } from "react";
-import { useTracePad } from "./use-trace-pad";
+import { useTracePad, type DrawTool, type ToolSize } from "./use-trace-pad";
 
 export interface TraceCanvasHandle {
   clear: () => void;
 }
 
-export const TraceCanvas = forwardRef<TraceCanvasHandle, { guideText: string; strokeColor: string }>(
-  function TraceCanvas({ guideText, strokeColor }, ref) {
-    const { canvasRef, containerRef, clear, handlePointerDown, handlePointerMove, handlePointerUp } =
-      useTracePad({ guideText, strokeColor });
+export const TraceCanvas = forwardRef<
+  TraceCanvasHandle,
+  { guideText: string; strokeColor: string; tool?: DrawTool; size?: ToolSize }
+>(function TraceCanvas({ guideText, strokeColor, tool, size }, ref) {
+  const { canvasRef, containerRef, clear, handlePointerDown, handlePointerMove, handlePointerUp } =
+    useTracePad({ guideText, strokeColor, tool, size });
 
-    useImperativeHandle(ref, () => ({ clear }), [clear]);
+  useImperativeHandle(ref, () => ({ clear }), [clear]);
 
-    return (
-      <div
-        ref={containerRef}
-        className="aspect-square w-full max-w-md self-center overflow-hidden rounded-3xl border border-border bg-card shadow-lg"
-      >
-        <canvas
-          ref={canvasRef}
-          role="img"
-          aria-label={`Writing practice pad. Guide letter ${guideText}. Draw with your mouse, finger, or stylus.`}
-          className="touch-none"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-        />
-      </div>
-    );
-  },
-);
+  return (
+    <div
+      ref={containerRef}
+      className="aspect-square w-full max-w-md self-center overflow-hidden rounded-3xl border border-border bg-card shadow-lg"
+    >
+      <canvas
+        ref={canvasRef}
+        role="img"
+        aria-label={`Writing practice pad. Guide letter ${guideText}. Draw with your mouse, finger, or stylus.`}
+        className="touch-none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+      />
+    </div>
+  );
+});
