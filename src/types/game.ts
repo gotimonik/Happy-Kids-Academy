@@ -17,7 +17,8 @@ export type GameId =
   | "tracing-numbers"
   | "speed-round"
   | "simon-pattern"
-  | "sound-safari";
+  | "sound-safari"
+  | "living-world";
 
 export interface GameDefinition {
   readonly id: GameId;

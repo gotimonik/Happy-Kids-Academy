@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { PageContainer } from "@/components/shared/page-container";
 import { MemoryGame } from "@/features/games/memory/memory-game";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function MemoryPage() {
   return (
     <PageContainer>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Games", href: "/games" }, { label: "Memory Game" }]} />
       <h1 className="font-display text-2xl font-bold">Memory Game</h1>
       <MemoryGame />
     </PageContainer>

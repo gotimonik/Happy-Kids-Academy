@@ -6,7 +6,7 @@ function color(index: number): string {
   return PALETTE[index % PALETTE.length] ?? "#6C5CE7";
 }
 
-/** All 16 game tiles, in the same order as the Android app's Games hub. */
+/** All 17 game tiles. The first 16 match the Android app's Games hub order; new web-only tiles are appended. */
 export const GAME_REGISTRY: readonly GameDefinition[] = [
   { id: "memory", title: "Memory Game", icon: "🧠", color: color(0), description: "Flip and match pairs", href: "/games/memory" },
   { id: "balloon-pop", title: "Balloon Pop", icon: "🎈", color: color(1), description: "Pop the correct letter", href: "/games/balloon-pop" },
@@ -27,4 +27,5 @@ export const GAME_REGISTRY: readonly GameDefinition[] = [
   { id: "speed-round", title: "Speed Round", icon: "⏱️", color: color(1), description: "Beat the 60-second clock", href: "/games/speed-round" },
   { id: "simon-pattern", title: "Color Memory", icon: "🔴", color: color(2), description: "Watch and repeat the pattern", href: "/games/simon-pattern" },
   { id: "sound-safari", title: "Sound Safari", icon: "🦁", color: color(3), description: "Listen and find the animal", href: "/games/sound-safari" },
+  { id: "living-world", title: "Living World", icon: "🌦️", color: color(4), description: "Change day, night & weather — watch animals react", href: "/games/living-world" },
 ];

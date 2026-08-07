@@ -24,12 +24,23 @@ export function CategoryTile({ category }: { category: LearningCategory }) {
         className="absolute -right-5 -top-7 size-24 rounded-full bg-white/15 transition-transform group-hover:scale-110"
       />
       <span aria-hidden="true" className="absolute -left-6 -bottom-8 size-24 rounded-full bg-black/10 blur-md" />
-      <div className="relative flex items-start justify-between">
-        <span aria-hidden="true" className="text-[3rem] font-black leading-none drop-shadow-sm">
+      <div className="relative flex items-start justify-between gap-2">
+        {/*
+          `min-w-0 truncate` matters here: `category.icon` is plain text for
+          several categories ("ABC", "123", "+ −"), not a fixed-size emoji. On
+          the narrow 2-column mobile grid, a flex child's default minimum
+          width is its content's un-shrunk size, so without this the icon
+          could refuse to shrink and push the star badge outside the tile's
+          `overflow-hidden` bounds — clipping the badge instead of the icon.
+        */}
+        <span
+          aria-hidden="true"
+          className="min-w-0 truncate text-4xl font-black leading-none drop-shadow-sm sm:text-5xl"
+        >
           {category.icon}
         </span>
         {stars > 0 && (
-          <span className="flex items-center gap-0.5 rounded-full bg-black/20 px-2 py-0.5 text-xs font-bold backdrop-blur-sm">
+          <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-black/20 px-2 py-0.5 text-xs font-bold backdrop-blur-sm">
             <Star className="size-3 fill-current" aria-hidden="true" />
             {stars}
           </span>

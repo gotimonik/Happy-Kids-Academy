@@ -1,5 +1,11 @@
 export interface QuizQuestion {
   readonly prompt: string;
+  /**
+   * When set, the prompt is a color-identification question and `prompt` is
+   * generic text ("What color is this?") — the actual color to show is this
+   * hex value, not encoded in `prompt` itself.
+   */
+  readonly promptColor?: string;
   readonly correctAnswer: string;
   readonly options: readonly string[];
 }

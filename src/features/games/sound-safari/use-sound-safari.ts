@@ -13,7 +13,14 @@ const SOUND_ITEMS = animalsCategory.items.filter((item) => Boolean(item.sound));
 
 function pickRound(): { target: LearningItem; options: LearningItem[] } {
   const target = SOUND_ITEMS[Math.floor(Math.random() * SOUND_ITEMS.length)] ?? SOUND_ITEMS[0]!;
-  const distractors = shuffle(animalsCategory.items.filter((item) => item.id !== target.id)).slice(0, 2);
+  // Several animals share the exact same emoji (Wolf/Hyena/Jackal all render
+  // 🐺, Leopard/Cheetah both 🐆, etc.). A distractor that looks identical to
+  // the target makes the round unwinnable by reasoning — the child hears the
+  // right sound but sees two indistinguishable icons — so those are excluded.
+  const distractorPool = animalsCategory.items.filter(
+    (item) => item.id !== target.id && item.icon !== target.icon,
+  );
+  const distractors = shuffle(distractorPool).slice(0, 2);
   return { target, options: shuffle([target, ...distractors]) };
 }
 

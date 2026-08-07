@@ -3,6 +3,7 @@
 import { Volume2 } from "lucide-react";
 import { Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LivingIcon } from "@/components/shared/living-icon";
 import { useSpeechSynthesis } from "@/lib/speech/use-speech-synthesis";
 import type { LearningItem } from "@/types/item";
 import { LANGUAGE_LOCALES } from "@/types/settings";
@@ -47,9 +48,9 @@ export function FlashCard({ item, accentColor }: { item: LearningItem; accentCol
               </span>
             )}
             {item.icon && (
-              <span aria-hidden="true" className="text-5xl sm:text-6xl">
-                {item.icon}
-              </span>
+              <LivingIcon label={item.label} className="text-5xl sm:text-6xl">
+                <span aria-hidden="true">{item.icon}</span>
+              </LivingIcon>
             )}
           </>
         )}

@@ -5,6 +5,7 @@ import { animalsCategory } from "@/data/categories/animals";
 import { useChime } from "@/lib/audio/use-chime";
 import { vibrate } from "@/lib/haptics/vibrate";
 import { shuffle } from "@/lib/quiz/utils";
+import type { LearningItem } from "@/types/item";
 
 export interface MemoryCard {
   readonly id: number;
@@ -27,9 +28,28 @@ function deterministicDeck(): MemoryCard[] {
   return pairsToCards(animalsCategory.items.slice(0, PAIR_COUNT));
 }
 
+/**
+ * Picks `count` animals with distinct icons. Several animals share the exact
+ * same emoji (Wolf/Hyena/Jackal all render 🐺, Leopard/Cheetah both 🐆, Mole
+ * and Mongoose both 🐾) — if a round drew two of those, their cards would be
+ * visually identical, so flipping either one and getting a "not a match"
+ * result would look wrong to a child even though the game is technically
+ * correct (they're different animals under the hood).
+ */
+function pickUniqueIconAnimals(count: number): LearningItem[] {
+  const seenIcons = new Set<string>();
+  const uniqueAnimals = shuffle(animalsCategory.items).filter((item) => {
+    const icon = item.icon ?? "";
+    if (seenIcons.has(icon)) return false;
+    seenIcons.add(icon);
+    return true;
+  });
+  return uniqueAnimals.slice(0, count);
+}
+
 /** Randomized deck — only ever called post-mount or from an event handler. */
 function shuffledDeck(): MemoryCard[] {
-  const chosen = shuffle(animalsCategory.items).slice(0, PAIR_COUNT);
+  const chosen = pickUniqueIconAnimals(PAIR_COUNT);
   return shuffle(pairsToCards(chosen));
 }
 

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { AppHeader } from "./app-header";
-import { BottomNav } from "./bottom-nav";
 import { SideNav } from "./side-nav";
 import { SiteFooter } from "./site-footer";
 
@@ -14,10 +13,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
-      <div className="pb-24 md:pb-0">
-        <SiteFooter />
-      </div>
-      <BottomNav />
+      <SiteFooter />
+      {/*
+        Now that nothing is pinned to the bottom of the screen (nav moved into
+        the header), this just keeps the very last thing on the page off the
+        device edge — home-indicator safe area on iOS/Android, plus a little
+        breathing room. Also leaves headroom for a future ad banner so it
+        won't immediately butt up against the footer once one's added.
+      */}
+      <div style={{ height: "calc(env(safe-area-inset-bottom) + 2.5rem)" }} />
     </div>
   );
 }

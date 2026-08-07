@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { PageContainer } from "@/components/shared/page-container";
 import { SpeedRoundGame } from "@/features/games/speed-round/speed-round-game";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function SpeedRoundPage() {
   return (
     <PageContainer>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Games", href: "/games" }, { label: "Speed Round" }]} />
       <h1 className="font-display text-2xl font-bold">Speed Round</h1>
       <SpeedRoundGame />
     </PageContainer>

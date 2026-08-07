@@ -1,20 +1,55 @@
 import type { LearningCategory } from "@/types/category";
+import type { LearningItem } from "@/types/item";
 import type { QuizQuestion } from "@/types/quiz";
 import { alphabetCategory } from "@/data/categories/alphabet";
 import { buildOptions, pickDistractors } from "./utils";
 
-/** A standard "identify this card" question, drawn from a single category. */
+/** The glyph actually shown on screen for an item's picture-identification prompt. */
+function displayGlyph(item: LearningItem): string {
+  return item.symbol || item.icon || "";
+}
+
+/**
+ * A standard "identify this card" question, drawn from a single category.
+ *
+ * Two content classes need special handling beyond a plain icon-vs-label quiz:
+ *
+ * 1. Colors: every item shares the same "●" symbol, so the symbol alone can't
+ *    be the prompt — it has to be rendered *in the item's actual color*
+ *    (`promptColor`), otherwise every question shows an uncolored (black)
+ *    dot regardless of which color is being tested.
+ * 2. Categories with reused emoji (e.g. Wolf/Hyena/Jackal all render 🐺 in
+ *    Animals; several Fruits/Vegetables pairs share a glyph too): if a
+ *    distractor happens to render the exact same glyph as the correct
+ *    answer, the question becomes unanswerable from the picture alone —
+ *    the child is guessing between two options that look identical. We
+ *    exclude same-glyph items from the distractor pool so the three shown
+ *    options are always visually distinguishable from each other.
+ */
 export function createCategoryQuestion(category: LearningCategory): QuizQuestion {
   const items = category.items;
   const item = items[Math.floor(Math.random() * items.length)];
   if (!item) throw new Error(`Category "${category.slug}" has no items`);
 
-  const prompt = item.symbol || item.icon || "Find the answer";
-  const pool = items.map((candidate) => candidate.label);
-  const distractors = pickDistractors(pool, item.label, 2);
+  if (item.visualColor) {
+    const pool = items.map((candidate) => candidate.label);
+    const distractors = pickDistractors(pool, item.label, 2);
+    return {
+      prompt: "What color is this?",
+      promptColor: item.visualColor,
+      correctAnswer: item.label,
+      options: buildOptions(item.label, distractors),
+    };
+  }
+
+  const glyph = displayGlyph(item);
+  const distractorPool = items
+    .filter((candidate) => candidate.id !== item.id && displayGlyph(candidate) !== glyph)
+    .map((candidate) => candidate.label);
+  const distractors = pickDistractors(distractorPool, item.label, 2);
 
   return {
-    prompt,
+    prompt: glyph || "Find the answer",
     correctAnswer: item.label,
     options: buildOptions(item.label, distractors),
   };

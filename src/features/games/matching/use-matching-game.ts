@@ -20,9 +20,27 @@ const MODES: readonly { mode: MatchMode; title: string; category: typeof alphabe
   { mode: "fruit", title: "Fruit → Name", category: fruitsCategory },
 ];
 
+/** The glyph shown on the left-hand tile for a given mode — mirrors `leftValueFor` below. */
+function leftGlyph(mode: MatchMode, item: LearningItem): string {
+  if (mode === "letter" || mode === "number" || mode === "shape") return item.symbol ?? item.icon ?? "";
+  return item.icon ?? "";
+}
+
 function pickRound() {
   const config = MODES[Math.floor(Math.random() * MODES.length)] ?? MODES[0]!;
-  const items = shuffle(config.category.items).slice(0, 3) as LearningItem[];
+  // Some categories (Fruits, in particular) reuse the same emoji for
+  // several items (Apple/Pomegranate, Lemon/Lime, ...). If a round drew two
+  // of those, their left-hand tiles would be visually identical, making one
+  // pairing a coin flip instead of a real match — so rounds only draw items
+  // whose displayed glyph is unique among the three.
+  const seenGlyphs = new Set<string>();
+  const uniqueItems = shuffle(config.category.items).filter((item) => {
+    const glyph = leftGlyph(config.mode, item);
+    if (seenGlyphs.has(glyph)) return false;
+    seenGlyphs.add(glyph);
+    return true;
+  });
+  const items = uniqueItems.slice(0, 3) as LearningItem[];
   return {
     mode: config.mode,
     title: config.title,
@@ -42,8 +60,7 @@ function initialRound(): ReturnType<typeof pickRound> {
 }
 
 export function leftValueFor(mode: MatchMode, item: LearningItem): string {
-  if (mode === "letter" || mode === "number" || mode === "shape") return item.symbol ?? item.icon ?? "";
-  return item.icon ?? "";
+  return leftGlyph(mode, item);
 }
 
 export function rightValueFor(mode: MatchMode, item: LearningItem): string {
