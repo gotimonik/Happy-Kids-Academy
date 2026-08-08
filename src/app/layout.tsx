@@ -8,6 +8,7 @@ import { BackButtonHandler } from "@/components/shared/back-button-handler";
 import { SplashScreenHandler } from "@/components/shared/splash-screen-handler";
 import { GoogleAnalytics } from "@/components/shared/google-analytics";
 import { PwaRegister } from "@/components/shared/pwa-register";
+import { ScrollToTop } from "@/components/shared/scroll-to-top";
 import { SessionTimeTracker } from "@/components/shared/session-time-tracker";
 import "./globals.css";
 
@@ -109,6 +110,7 @@ export default function RootLayout({
           <AnimatedBackground />
           <SplashScreenHandler />
           <BackButtonHandler />
+          <ScrollToTop />
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
