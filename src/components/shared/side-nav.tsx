@@ -3,12 +3,51 @@
 import { motion } from "framer-motion";
 import { Sparkle } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/shared/skeleton-card";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
 import { StaticLink as Link } from "./static-link";
 
+/**
+ * Same shape as the real nav below, so swapping the two never shifts layout.
+ * Each row's `framer-motion` entrance (`initial={{ opacity: 0, x: -8 }}`)
+ * renders that invisible starting state inline in the statically-exported
+ * HTML — without this, the whole menu would sit blank until React hydrates
+ * and starts the animation, which can be a very visible gap on a slow
+ * connection/device.
+ */
+function SideNavSkeleton() {
+  return (
+    <nav
+      aria-busy="true"
+      aria-label="Loading menu"
+      className="sticky top-20 hidden h-fit w-56 shrink-0 flex-col gap-1 rounded-3xl border border-border bg-card p-3 shadow-md md:flex"
+    >
+      <div className="flex items-center gap-1.5 px-3 pb-2 pt-1">
+        <Skeleton className="size-3.5 rounded-full" />
+        <Skeleton className="h-3 w-12" />
+      </div>
+      {NAV_ITEMS.map((item) => (
+        <div key={item.href} className="flex items-center gap-3 rounded-2xl px-3 py-2.5">
+          <Skeleton className="size-9 shrink-0 rounded-xl" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      ))}
+    </nav>
+  );
+}
+
 export function SideNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <SideNavSkeleton />;
 
   return (
     <nav

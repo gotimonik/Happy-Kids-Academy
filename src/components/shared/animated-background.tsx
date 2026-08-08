@@ -1,8 +1,14 @@
 const BLOBS = [
-  { color: "#6c5ce7", top: "-4%", left: "-6%", size: "24rem", duration: "22s", delay: "0s" },
-  { color: "#00b894", top: "2%", left: "78%", size: "20rem", duration: "27s", delay: "-9s" },
-  { color: "#fdcb6e", top: "72%", left: "82%", size: "26rem", duration: "31s", delay: "-16s" },
-  { color: "#ff707d", top: "78%", left: "-8%", size: "22rem", duration: "25s", delay: "-4s" },
+  { color: "#6c5ce7", top: "-4%", left: "-6%", size: "24rem", duration: "22s", delay: "0s", opacity: 32 },
+  { color: "#00b894", top: "2%", left: "78%", size: "20rem", duration: "27s", delay: "-9s", opacity: 30 },
+  { color: "#fdcb6e", top: "72%", left: "82%", size: "26rem", duration: "31s", delay: "-16s", opacity: 32 },
+  { color: "#ff707d", top: "78%", left: "-8%", size: "22rem", duration: "25s", delay: "-4s", opacity: 30 },
+  // A fifth, softer blob nearer the middle of the viewport — the other four
+  // sit in the corners, so on tall pages the whole scrollable middle read
+  // as flat color with nothing drifting through it. Lower opacity than the
+  // corner blobs so it stays a background wash rather than competing with
+  // card content that sits over it.
+  { color: "#a45eea", top: "38%", left: "38%", size: "22rem", duration: "34s", delay: "-12s", opacity: 16 },
 ] as const;
 
 const SPARKLES = [
@@ -34,7 +40,7 @@ export function AnimatedBackground() {
             left: blob.left,
             width: blob.size,
             height: blob.size,
-            backgroundColor: `color-mix(in srgb, ${blob.color} 24%, transparent)`,
+            backgroundColor: `color-mix(in srgb, ${blob.color} ${blob.opacity}%, transparent)`,
             animationDuration: blob.duration,
             animationDelay: blob.delay,
           }}

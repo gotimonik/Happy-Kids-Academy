@@ -1,20 +1,32 @@
 "use client";
 
-import { Clock, Coins, ListChecks, Star, Target, Award } from "lucide-react";
+import { Award, Clock, Coins, ListChecks, Star, Target } from "lucide-react";
 import { categories } from "@/data/categories";
+import { RewardStatCard } from "@/features/rewards/reward-stat-card";
 import { Skeleton } from "@/components/shared/skeleton-card";
 import { useStoreHydrated } from "@/lib/use-store-hydrated";
+import { heroGradient } from "@/lib/ui/tile-gradient";
 import { selectBadges, useProgressStore } from "@/store/progress-store";
-import { ProgressRow } from "./progress-row";
 import { StarsByCategoryChart } from "./stars-by-category-chart";
+
+/** Renders `125` as `2h 5m` and anything under an hour as e.g. `42 min`, so a
+ * parent skimming the summary reads a natural duration instead of a raw
+ * (and, after a few sessions, three-digit) minute count. */
+function formatTimeSpent(totalSeconds: number): string {
+  const totalMinutes = Math.round(totalSeconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes} min`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+}
 
 function ParentDashboardSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading learning summary" className="flex flex-col gap-4">
-      <Skeleton className="h-8 w-56" />
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div aria-busy="true" aria-label="Loading learning summary" className="flex flex-col gap-6">
+      <Skeleton className="h-40 w-full rounded-3xl" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {Array.from({ length: 6 }, (_, i) => (
-          <Skeleton key={i} className="h-[68px] w-full rounded-2xl" />
+          <Skeleton key={i} className="h-28 w-full rounded-2xl" />
         ))}
       </div>
       <Skeleton className="h-72 w-full rounded-2xl" />
@@ -39,20 +51,54 @@ export function ParentDashboard() {
   if (!hydrated) return <ParentDashboardSkeleton />;
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="font-display text-2xl font-bold">Learning summary</h1>
+    <div className="flex flex-col gap-6">
+      <div
+        className="relative w-full overflow-hidden rounded-3xl p-6 text-center text-white shadow-lg sm:p-8"
+        style={heroGradient()}
+      >
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-1/2 rounded-t-3xl bg-gradient-to-b from-white/25 to-transparent"
+        />
+        <span aria-hidden="true" className="absolute -right-10 -top-12 size-40 rounded-full bg-white/15" />
+        <span aria-hidden="true" className="absolute -left-12 -bottom-16 size-40 rounded-full bg-black/10 blur-md" />
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <ProgressRow icon={<Clock />} label="Time spent" value={`${Math.round(timeSeconds / 60)} min`} />
-        <ProgressRow icon={<ListChecks />} label="Completed lessons" value={String(lessonsCompleted)} />
-        <ProgressRow
+        <p aria-hidden="true" className="relative text-6xl drop-shadow-sm">
+          📊
+        </p>
+        <h1 className="relative mt-2 font-display text-2xl font-bold">Learning summary</h1>
+        <p className="relative mx-auto mt-1 max-w-xs text-sm font-semibold text-white/85">
+          A quick look at how your child is progressing across Happy Kids Academy
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <RewardStatCard
+          icon={<Clock />}
+          label="Time spent"
+          value={formatTimeSpent(timeSeconds)}
+          accentColor="#4C9AFF"
+        />
+        <RewardStatCard
+          icon={<ListChecks />}
+          label="Lessons completed"
+          value={lessonsCompleted}
+          accentColor="#37C183"
+        />
+        <RewardStatCard
           icon={<Target />}
           label="Topics attempted"
-          value={`${topicsAttempted} / ${categories.length}`}
+          value={`${topicsAttempted}/${categories.length}`}
+          accentColor="#FF9F43"
         />
-        <ProgressRow icon={<Star />} label="Quiz score total" value={String(quizScoreTotal)} />
-        <ProgressRow icon={<Coins />} label="Coins earned" value={String(coins)} />
-        <ProgressRow icon={<Award />} label="Badges" value={String(badges)} />
+        <RewardStatCard
+          icon={<Star className="fill-current" />}
+          label="Quiz score total"
+          value={quizScoreTotal}
+          accentColor="#A45EEA"
+        />
+        <RewardStatCard icon={<Coins />} label="Coins earned" value={coins} accentColor="#E17055" />
+        <RewardStatCard icon={<Award />} label="Badges" value={badges} accentColor="#6C5CE7" />
       </div>
 
       <StarsByCategoryChart />

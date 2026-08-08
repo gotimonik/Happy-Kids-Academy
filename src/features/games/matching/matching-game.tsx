@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeedbackToast } from "@/components/shared/feedback-toast";
 import { cn } from "@/lib/utils";
-import { leftValueFor, rightValueFor, useMatchingGame } from "./use-matching-game";
+import { leftImageFor, leftValueFor, rightValueFor, useMatchingGame } from "./use-matching-game";
 
 export function MatchingGame() {
   const {
@@ -30,25 +30,28 @@ export function MatchingGame() {
 
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col gap-3">
-          {items.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              disabled={matched[index]}
-              onClick={() => selectLeft(index)}
-              aria-pressed={selectedLeft === index}
-              className={cn(
-                "flex min-h-24 items-center justify-center rounded-2xl border-2 p-3 text-3xl font-bold shadow-sm transition-colors",
-                matched[index]
-                  ? "border-success bg-success/10 text-success"
-                  : selectedLeft === index
-                    ? "border-warning bg-warning/10"
-                    : "border-border bg-card",
-              )}
-            >
-              {leftValueFor(mode, item)}
-            </button>
-          ))}
+          {items.map((item, index) => {
+            const image = leftImageFor(mode, item);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                disabled={matched[index]}
+                onClick={() => selectLeft(index)}
+                aria-pressed={selectedLeft === index}
+                className={cn(
+                  "flex min-h-24 items-center justify-center rounded-2xl border-2 p-3 text-3xl font-bold shadow-sm transition-colors",
+                  matched[index]
+                    ? "border-success bg-success/10 text-success"
+                    : selectedLeft === index
+                      ? "border-warning bg-warning/10"
+                      : "border-border bg-card",
+                )}
+              >
+                {image ? <img src={image} alt="" aria-hidden="true" className="size-12" /> : leftValueFor(mode, item)}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex flex-col gap-3">

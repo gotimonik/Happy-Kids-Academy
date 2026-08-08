@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-hidden="true">
+  <rect x="30" y="6" width="4" height="6" rx="1.5" fill="#5C9C3E"/>
+  <circle cx="32" cy="34" r="22" fill="#C23B4E"/>
+  <g fill="#9E2438" opacity="0.85">
+    <circle cx="22" cy="22" r="2.2"/>
+    <circle cx="30" cy="18" r="2.2"/>
+    <circle cx="40" cy="20" r="2.2"/>
+    <circle cx="47" cy="27" r="2.2"/>
+    <circle cx="17" cy="30" r="2.2"/>
+    <circle cx="25" cy="28" r="2.2"/>
+    <circle cx="34" cy="27" r="2.2"/>
+    <circle cx="43" cy="34" r="2.2"/>
+    <circle cx="20" cy="38" r="2.2"/>
+    <circle cx="28" cy="37" r="2.2"/>
+    <circle cx="37" cy="38" r="2.2"/>
+    <circle cx="45" cy="43" r="2.2"/>
+    <circle cx="24" cy="46" r="2.2"/>
+    <circle cx="32" cy="47" r="2.2"/>
+    <circle cx="40" cy="47" r="2.2"/>
+    <circle cx="30" cy="53" r="2.2"/>
+  </g>
+  <ellipse cx="23" cy="24" rx="7" ry="6" fill="#E36A78" opacity="0.35"/>
+</svg>

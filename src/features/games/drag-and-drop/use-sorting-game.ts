@@ -60,16 +60,20 @@ export function useSortingGame() {
     setSelectedId((current) => (current === id ? null : id));
   }, []);
 
-  const dropInBucket = useCallback(
-    (bucket: SortItem["bucket"]) => {
-      if (!selectedId) return;
-      const item = items.find((i) => i.id === selectedId);
+  /**
+   * Tries to place a specific item into a bucket, independent of tap-select
+   * state — used directly by the drag gesture (which knows exactly which
+   * item is under the finger, unlike the tap flow's `selectedId`).
+   */
+  const dropItem = useCallback(
+    (id: string, bucket: SortItem["bucket"]) => {
+      const item = items.find((candidate) => candidate.id === id);
       if (!item) return;
 
       if (item.bucket === bucket) {
         vibrate(30);
         setSorted((prev) => new Set(prev).add(item.id));
-        setSelectedId(null);
+        setSelectedId((current) => (current === id ? null : current));
         if (sorted.size + 1 === items.length) playWinChime();
       } else {
         vibrate(100);
@@ -77,10 +81,29 @@ export function useSortingGame() {
         setTimeout(() => setWrongBucket(null), 500);
       }
     },
-    [selectedId, items, sorted, playWinChime],
+    [items, sorted, playWinChime],
+  );
+
+  /** Tap-to-select flow: drops whichever item is currently selected. */
+  const dropInBucket = useCallback(
+    (bucket: SortItem["bucket"]) => {
+      if (!selectedId) return;
+      dropItem(selectedId, bucket);
+    },
+    [selectedId, dropItem],
   );
 
   const isComplete = items.length > 0 && sorted.size === items.length;
 
-  return { items, selectedId, sorted, wrongBucket, isComplete, selectItem, dropInBucket, reset };
+  return {
+    items,
+    selectedId,
+    sorted,
+    wrongBucket,
+    isComplete,
+    selectItem,
+    dropItem,
+    dropInBucket,
+    reset,
+  };
 }

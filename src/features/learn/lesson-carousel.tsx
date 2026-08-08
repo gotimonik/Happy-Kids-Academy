@@ -55,13 +55,13 @@ export function LessonCarousel({
         </span>
       </div>
 
-      <FlashCard item={item} accentColor={category.color} />
+      <FlashCard key={item.id} item={item} accentColor={category.color} />
 
       <div className="flex gap-3">
         <Button
           type="button"
           variant="outline"
-          size="kid"
+          size="md"
           className="flex-1"
           onClick={goBack}
           disabled={index === 0}
@@ -71,7 +71,7 @@ export function LessonCarousel({
         </Button>
         <Button
           type="button"
-          size="kid"
+          size="md"
           className="flex-1"
           style={{ backgroundColor: category.color }}
           onClick={goNext}

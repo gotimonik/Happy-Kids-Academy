@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-hidden="true">
+  <ellipse cx="32" cy="34" rx="24" ry="26" fill="#93A83C"/>
+  <g fill="#7B9130">
+    <path d="M20 14 l3 -3 3 3 -3 3 z"/>
+    <path d="M30 10 l3 -3 3 3 -3 3 z"/>
+    <path d="M40 14 l3 -3 3 3 -3 3 z"/>
+    <path d="M14 24 l3 -3 3 3 -3 3 z"/>
+    <path d="M24 22 l3 -3 3 3 -3 3 z"/>
+    <path d="M34 22 l3 -3 3 3 -3 3 z"/>
+    <path d="M44 24 l3 -3 3 3 -3 3 z"/>
+    <path d="M12 36 l3 -3 3 3 -3 3 z"/>
+    <path d="M20 34 l3 -3 3 3 -3 3 z"/>
+    <path d="M30 32 l3 -3 3 3 -3 3 z"/>
+    <path d="M40 34 l3 -3 3 3 -3 3 z"/>
+    <path d="M48 36 l3 -3 3 3 -3 3 z"/>
+    <path d="M16 46 l3 -3 3 3 -3 3 z"/>
+    <path d="M26 46 l3 -3 3 3 -3 3 z"/>
+    <path d="M36 46 l3 -3 3 3 -3 3 z"/>
+    <path d="M44 46 l3 -3 3 3 -3 3 z"/>
+    <path d="M22 56 l3 -3 3 3 -3 3 z"/>
+    <path d="M32 58 l3 -3 3 3 -3 3 z"/>
+    <path d="M42 56 l3 -3 3 3 -3 3 z"/>
+  </g>
+  <rect x="29" y="6" width="5" height="6" rx="1.5" fill="#5C9C3E"/>
+  <ellipse cx="22" cy="22" rx="8" ry="7" fill="#A8BB55" opacity="0.4"/>
+</svg>

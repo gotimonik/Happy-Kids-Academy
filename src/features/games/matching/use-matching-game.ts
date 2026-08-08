@@ -63,6 +63,11 @@ export function leftValueFor(mode: MatchMode, item: LearningItem): string {
   return leftGlyph(mode, item);
 }
 
+/** The illustration to show instead of `leftValueFor`'s text glyph, for items with no real emoji (Fruit mode only). */
+export function leftImageFor(mode: MatchMode, item: LearningItem): string | undefined {
+  return mode === "fruit" ? item.image : undefined;
+}
+
 export function rightValueFor(mode: MatchMode, item: LearningItem): string {
   if (mode === "letter") return `${item.icon ?? ""}  ${item.label}`;
   return item.label;

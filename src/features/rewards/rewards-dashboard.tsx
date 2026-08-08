@@ -8,6 +8,7 @@ import { tileGradient } from "@/lib/ui/tile-gradient";
 import { cn } from "@/lib/utils";
 import { selectBadges, selectLevel, selectTotalStars, useProgressStore } from "@/store/progress-store";
 import { RewardStatCard } from "./reward-stat-card";
+import { ShareProgressButton } from "./share-progress-button";
 
 const CERTIFICATE_THRESHOLD = 15;
 const LEVEL_STARS = 8;
@@ -106,6 +107,8 @@ export function RewardsDashboard() {
             : `Earn ${CERTIFICATE_THRESHOLD - stars} more stars to unlock a certificate`}
         </span>
       </div>
+
+      <ShareProgressButton level={level} stars={stars} coins={coins} badges={badges} lessonsCompleted={lessonsCompleted} />
     </div>
   );
 }

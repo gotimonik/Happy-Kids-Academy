@@ -60,12 +60,19 @@ export const metadata: Metadata = {
     description:
       "A joyful, free learning world for young children: alphabet, numbers, math, shapes, colors, animals, Gujarati, Hindi, quizzes, and games.",
     url: siteUrl,
+    // Without this, links shared to chat/social apps (e.g. the Rewards page's
+    // "Share my progress" button, which can only send a plain URL/text on
+    // platforms without file-sharing support) unfurl with no picture at all —
+    // a static export can't generate a per-share image on demand, so this is
+    // the app's one general-purpose "come play" preview card.
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Happy Kids Academy — Learn, Play, Grow" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Happy Kids Academy — Learn, Play, Grow",
     description:
       "A joyful, free learning world for young children: alphabet, numbers, math, shapes, colors, animals, Gujarati, Hindi, quizzes, and games.",
+    images: ["/og-image.png"],
   },
 };
 

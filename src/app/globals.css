@@ -198,7 +198,8 @@
     min-height: 100%;
     /* Pre-hydration fallback matching the new --background sky-blue tint,
        so there's no flash of the old cream color before styles apply. */
-    background: #e8f2fb;
+    /* background: #e8f2fb; */
+    background-attachment: fixed;
   }
 
   html {
@@ -218,6 +219,14 @@
     @apply bg-background text-foreground font-sans antialiased;
     margin: 0;
     position: relative;
+    /* A very soft brand-tinted wash instead of one flat fill — a hint of
+       the hero's purple in the top corner easing into a hint of its coral
+       in the bottom corner, both barely-there against --background. Pairs
+       with the dot texture and `<AnimatedBackground>` blobs below (all
+       painted further back than this, since it's the body's own background
+       layer) to give the page some depth instead of reading as a single
+       flat color. */
+    background-attachment: fixed;
   }
 
   /* A faint dot texture behind every page, fixed to the viewport so it reads

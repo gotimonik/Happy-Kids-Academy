@@ -11,6 +11,7 @@ const STATIC_ROUTES = [
   "/quiz",
   "/games",
   "/rewards",
+  "/progress",
   "/parents",
   "/study-coach",
   "/study-coach/game-variations",

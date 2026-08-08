@@ -91,7 +91,13 @@ export function QuizSession({
     <div className="flex flex-col gap-4">
       <h1 className="sr-only">{title}</h1>
       <QuizProgressHeader round={round} totalRounds={totalRounds} score={score} accentColor={accentColor} />
-      <QuestionCard key={round} prompt={question.prompt} promptColor={question.promptColor} accentColor={accentColor} />
+      <QuestionCard
+        key={round}
+        prompt={question.prompt}
+        promptColor={question.promptColor}
+        promptImage={question.promptImage}
+        accentColor={accentColor}
+      />
       <div className="flex flex-col gap-3">
         {question.options.map((option, index) => (
           <OptionButton

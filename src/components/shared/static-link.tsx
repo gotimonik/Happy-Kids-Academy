@@ -1,6 +1,7 @@
 "use client";
 
 import { Capacitor } from "@capacitor/core";
+import Link from "next/link";
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
 
 interface StaticLinkProps
@@ -58,11 +59,13 @@ function normalizePathname(pathname: string): string {
 
 /**
  * True when `href` points at the page currently on screen (same path, query,
- * and hash). Every in-app navigation here is a hard `window.location`
- * navigation (see below), so clicking a link back to the current page — e.g.
- * tapping the already-active tab in the bottom/side nav — would otherwise
- * force a full reload for no reason: a visible flash and lost scroll/animation
- * state. Treating it as a no-op instead matches how native app tab bars behave.
+ * and hash). In the native Capacitor app this link becomes a hard
+ * `window.location` navigation (see below), so clicking a link back to the
+ * current page — e.g. tapping the already-active tab in the bottom/side nav —
+ * would otherwise force a full reload for no reason: a visible flash and lost
+ * scroll/animation state. Treating it as a no-op instead matches how native
+ * app tab bars behave. (In the browser this also just skips a redundant
+ * client-side navigation to the same URL.)
  */
 function isCurrentLocation(href: string): boolean {
   if (
@@ -103,9 +106,17 @@ export function StaticLink({
     }
 
     if (!Capacitor.isNativePlatform()) {
+      // Plain web (browser dev/prod, not the packaged app): let Next's
+      // `<Link>` do its normal client-side transition below — no
+      // `event.preventDefault()` here, so nothing further needs handling.
       return;
     }
 
+    // Native Capacitor WebView: it serves the exported site as literal
+    // static files with no server-side URL rewriting, so an extensionless
+    // route like `/learn/animals` 404s — it has to be `/learn/animals.html`.
+    // Next's client router doesn't know about that rewrite, so this bypasses
+    // it with a hard navigation straight to the corrected `.html` path.
     const nativeHref = toNativeStaticHref(href);
 
     if (nativeHref === href) {
@@ -117,8 +128,8 @@ export function StaticLink({
   }
 
   return (
-    <a href={href} target={target} {...props} onClick={handleClick}>
+    <Link href={href} target={target} {...props} onClick={handleClick}>
       {children}
-    </a>
+    </Link>
   );
 }

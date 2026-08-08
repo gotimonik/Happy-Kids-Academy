@@ -13,6 +13,8 @@ interface UseTracePadOptions {
   readonly tool?: DrawTool;
   /** Brush thickness preset — "medium" (default) matches the original fixed width. */
   readonly size?: ToolSize;
+  /** Fires whenever undo becomes available/unavailable, so a parent button can enable/disable itself. */
+  readonly onCanUndoChange?: (canUndo: boolean) => void;
 }
 
 const GUIDE_OPACITY = 0.22;
@@ -22,6 +24,11 @@ const GUIDE_OPACITY = 0.22;
 // actually catch a mistake with.
 const PENCIL_WIDTHS: Record<ToolSize, number> = { small: 5, medium: 10, large: 18 };
 const ERASER_WIDTHS: Record<ToolSize, number> = { small: 16, medium: 28, large: 42 };
+
+// How many strokes (or clears) back "Undo" can step through. Each entry is a
+// full pixel snapshot of the canvas, so this is capped fairly low to bound
+// memory on lower-end devices/webviews rather than for any UX reason.
+const MAX_UNDO_STEPS = 15;
 
 /** Turns a computed `rgb(...)`/`rgba(...)` color string into one with a new alpha. */
 function withAlpha(color: string, alpha: number): string {
@@ -39,12 +46,12 @@ function withAlpha(color: string, alpha: number): string {
  * Also reused (with `guideText=""`) as the free-draw canvas — there, picking
  * a new pen color, switching to the eraser, or changing the brush size must
  * NOT clear what's already drawn. Resizing the `<canvas>` element (via
- * `drawGuide`, which also runs on mount and on a guide-text/theme change)
+ * `paintGuide`, which also runs on mount and on a guide-text/theme change)
  * implicitly wipes its contents *and* resets every other context property
  * per the HTML canvas spec, so that path is kept strictly separate from
  * color/tool/size changes — those only ever touch `ctx.strokeStyle` /
  * `ctx.globalCompositeOperation` / `ctx.lineWidth` on the existing canvas,
- * via refs that `drawGuide` also uses to restore the current pen after a
+ * via refs that `paintGuide` also uses to restore the current pen after a
  * real resize.
  */
 export function useTracePad({
@@ -52,6 +59,7 @@ export function useTracePad({
   strokeColor,
   tool = "pencil",
   size = "medium",
+  onCanUndoChange,
 }: UseTracePadOptions) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -59,6 +67,11 @@ export function useTracePad({
   const strokeColorRef = useRef(strokeColor);
   const toolRef = useRef(tool);
   const sizeRef = useRef(size);
+  // Undo snapshots live in a ref, not React state — they're raw pixel
+  // buffers taken on every stroke, so re-rendering on every push would be
+  // both pointless (nothing on screen reads the stack itself) and wasteful.
+  const historyRef = useRef<ImageData[]>([]);
+  const onCanUndoChangeRef = useRef(onCanUndoChange);
   // Only used to trigger a redraw when the user toggles light/dark mode —
   // the actual color comes from the container's computed style below.
   const { resolvedTheme } = useTheme();
@@ -75,6 +88,14 @@ export function useTracePad({
     sizeRef.current = size;
   }, [size]);
 
+  useEffect(() => {
+    onCanUndoChangeRef.current = onCanUndoChange;
+  }, [onCanUndoChange]);
+
+  const notifyCanUndo = useCallback((canUndo: boolean) => {
+    onCanUndoChangeRef.current?.(canUndo);
+  }, []);
+
   const applyToolStyle = useCallback(
     (ctx: CanvasRenderingContext2D, activeTool: DrawTool, activeSize: ToolSize) => {
       ctx.globalCompositeOperation = activeTool === "eraser" ? "destination-out" : "source-over";
@@ -86,7 +107,12 @@ export function useTracePad({
     [],
   );
 
-  const drawGuide = useCallback(() => {
+  // Resizes the backing bitmap to match the container and redraws the guide
+  // glyph. Does NOT touch the undo stack — callers decide separately whether
+  // this particular repaint should be undoable (a real resize invalidates old
+  // snapshots since their pixel dimensions no longer match; a deliberate
+  // "Clear" should stay undoable).
+  const paintGuide = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
@@ -129,6 +155,16 @@ export function useTracePad({
     applyToolStyle(ctx, toolRef.current, sizeRef.current);
   }, [guideText, resolvedTheme, applyToolStyle]);
 
+  // Mount / resize / guide-text-or-theme-change: a genuine repaint whose
+  // pixel dimensions may differ from before, so any earlier undo snapshots
+  // are no longer valid — drop them rather than risk `undo` misdrawing a
+  // mismatched size.
+  const drawGuide = useCallback(() => {
+    paintGuide();
+    historyRef.current = [];
+    notifyCanUndo(false);
+  }, [paintGuide, notifyCanUndo]);
+
   useEffect(() => {
     drawGuide();
     window.addEventListener("resize", drawGuide);
@@ -150,18 +186,84 @@ export function useTracePad({
     applyToolStyle(ctx, tool, size);
   }, [tool, size, applyToolStyle]);
 
+  const pushHistorySnapshot = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    historyRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (historyRef.current.length > MAX_UNDO_STEPS) historyRef.current.shift();
+    notifyCanUndo(true);
+  }, [notifyCanUndo]);
+
+  // "Clear" wipes the picture but — unlike a resize — keeps it undoable:
+  // snapshot first, then repaint.
+  const clear = useCallback(() => {
+    pushHistorySnapshot();
+    paintGuide();
+  }, [pushHistorySnapshot, paintGuide]);
+
+  const undo = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    const snapshot = historyRef.current.pop();
+    if (canvas && ctx && snapshot) {
+      ctx.putImageData(snapshot, 0, 0);
+    }
+    notifyCanUndo(historyRef.current.length > 0);
+  }, [notifyCanUndo]);
+
+  // Exports the drawing as a downloadable/storable PNG. The live canvas has
+  // a transparent background (only strokes are actual pixels — the white
+  // card behind it is CSS, not canvas content), which would make a saved
+  // file look broken against most viewers/backgrounds, so this composites
+  // onto a plain white background first.
+  const exportPng = useCallback((): string | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const output = document.createElement("canvas");
+    output.width = canvas.width;
+    output.height = canvas.height;
+    const outCtx = output.getContext("2d");
+    if (!outCtx) return null;
+    outCtx.fillStyle = "#FFFFFF";
+    outCtx.fillRect(0, 0, output.width, output.height);
+    outCtx.drawImage(canvas, 0, 0);
+    return output.toDataURL("image/png");
+  }, []);
+
+  // True when nothing has been drawn — every pixel is still fully
+  // transparent. Only meaningful with `guideText=""` (the free-draw canvas):
+  // a non-empty guide glyph is itself drawn with partial alpha, which would
+  // make this report `false` even with no strokes on top of it.
+  const isBlank = useCallback((): boolean => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return true;
+    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] !== 0) return false;
+    }
+    return true;
+  }, []);
+
   const getContext = () => canvasRef.current?.getContext("2d") ?? null;
 
-  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    const ctx = getContext();
-    if (!canvas || !ctx) return;
-    canvas.setPointerCapture(event.pointerId);
-    isDrawingRef.current = true;
-    const rect = canvas.getBoundingClientRect();
-    ctx.beginPath();
-    ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
-  }, []);
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      const ctx = getContext();
+      if (!canvas || !ctx) return;
+      // Snapshot before this stroke starts, so `undo` removes exactly the
+      // stroke the child is about to draw — not an arbitrary amount of it.
+      pushHistorySnapshot();
+      canvas.setPointerCapture(event.pointerId);
+      isDrawingRef.current = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
+    },
+    [pushHistorySnapshot],
+  );
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawingRef.current) return;
@@ -180,7 +282,10 @@ export function useTracePad({
   return {
     canvasRef,
     containerRef,
-    clear: drawGuide,
+    clear,
+    undo,
+    exportPng,
+    isBlank,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

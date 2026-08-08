@@ -9,11 +9,14 @@ import { motion } from "framer-motion";
 export function QuestionCard({
   prompt,
   promptColor,
+  promptImage,
   accentColor,
 }: {
   prompt: string;
   /** When set, renders an actual color swatch in this hex value instead of `prompt` as plain text — see `createCategoryQuestion`. */
   promptColor?: string;
+  /** When set, renders this illustration instead of `prompt`'s text glyph — for items with no real emoji. */
+  promptImage?: string;
   accentColor: string;
 }) {
   return (
@@ -45,6 +48,8 @@ export function QuestionCard({
           />
           <p className="relative font-display text-xl font-bold sm:text-2xl">{prompt}</p>
         </>
+      ) : promptImage ? (
+        <img src={promptImage} alt="" aria-hidden="true" className="relative size-24 sm:size-28" />
       ) : (
         <p className="relative font-display text-4xl font-bold sm:text-5xl">{prompt}</p>
       )}

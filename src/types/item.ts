@@ -9,6 +9,15 @@ export interface LearningItem {
   readonly symbol?: string;
   /** Decorative emoji icon, e.g. "🦁". Always paired with a text alternative. */
   readonly icon?: string;
+  /**
+   * Path to a small illustration under /public (e.g. "/images/produce/cauliflower.svg"),
+   * used instead of `icon` when a plain Unicode emoji doesn't exist for this
+   * item or would be a poor/misleading picture of it (e.g. no cauliflower or
+   * pomegranate emoji). When set, this takes priority over `icon` for
+   * anything that shows the item's picture; `icon` is still kept as the
+   * simple text fallback for contexts that only handle plain text.
+   */
+  readonly image?: string;
   /** Primary label, e.g. "Apple". */
   readonly label: string;
   /** Secondary detail line, e.g. "Pronunciation: A" or "Odd • ●●●". */

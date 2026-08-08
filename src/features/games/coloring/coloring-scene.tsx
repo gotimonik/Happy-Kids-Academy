@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import type { ColoringRegion, SceneId, ShapeSceneId, StructureSceneId } from "./use-coloring-game";
 import { isStructureScene, UNCOLORED_FILL } from "./use-coloring-game";
@@ -26,7 +27,14 @@ function buildRegionProps(fill: string, label: string, onClick: () => void): Reg
     role: "button",
     tabIndex: 0,
     "aria-label": label,
-    className: "cursor-pointer transition-colors",
+    // These are `tabIndex`-focusable SVG shapes, not native buttons — the
+    // browser's default UA focus outline doesn't reliably restrict itself
+    // to keyboard focus on those the way it does on real `<button>`s, so it
+    // was drawing a chunky rectangle around a just-*clicked* region too.
+    // Suppress the default outline and only draw one for real keyboard
+    // (`:focus-visible`) navigation, same as every other interactive
+    // element in the app.
+    className: "cursor-pointer outline-none transition-colors focus-visible:outline-2 focus-visible:outline-ring",
     onKeyDown: (event) => {
       if (event.key === "Enter" || event.key === " ") onClick();
     },
@@ -156,22 +164,26 @@ function structureContent(
   }
 }
 
-export function ColoringScene({
-  sceneId,
-  fills,
-  onRegionClick,
-}: {
-  sceneId: SceneId;
-  fills: Record<ColoringRegion, string>;
-  onRegionClick: (region: ColoringRegion) => void;
-}) {
+/**
+ * `ref` exposes the raw `<svg>` DOM node — the Coloring game rasterizes it
+ * (see `@/lib/svg-to-png`) to save a picture, the same way the Drawing
+ * game's canvas exports its own pixels.
+ */
+export const ColoringScene = forwardRef<
+  SVGSVGElement,
+  {
+    sceneId: SceneId;
+    fills: Record<ColoringRegion, string>;
+    onRegionClick: (region: ColoringRegion) => void;
+  }
+>(function ColoringScene({ sceneId, fills, onRegionClick }, ref) {
   function fillFor(region: ColoringRegion): string {
     return fills[region] ?? UNCOLORED_FILL;
   }
 
   if (isStructureScene(sceneId)) {
     return (
-      <svg viewBox={STRUCTURE_VIEWBOX} className="w-full max-w-md" aria-label={`A ${sceneId} to color`}>
+      <svg ref={ref} viewBox={STRUCTURE_VIEWBOX} className="w-full max-w-sm" aria-label={`A ${sceneId} to color`}>
         <rect x="0" y="0" width="300" height="220" fill="#EAF6FF" />
         {structureContent(sceneId, fillFor, onRegionClick)}
       </svg>
@@ -180,9 +192,9 @@ export function ColoringScene({
 
   const props = buildRegionProps(fillFor("shape"), `Color the ${sceneId}`, () => onRegionClick("shape"));
   return (
-    <svg viewBox={SHAPE_VIEWBOX} className="w-full max-w-md" aria-label={`A ${sceneId} to color`}>
+    <svg ref={ref} viewBox={SHAPE_VIEWBOX} className="w-full max-w-sm" aria-label={`A ${sceneId} to color`}>
       <rect x="0" y="0" width="300" height="260" fill="#EAF6FF" />
       {shapeOutline(sceneId, props)}
     </svg>
   );
-}
+});

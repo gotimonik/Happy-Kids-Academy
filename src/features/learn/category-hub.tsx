@@ -27,8 +27,9 @@ interface ActionTile {
   readonly wide?: boolean;
 }
 
-/** A small emoji / color swatch / short glyph to tease what's inside a category — skips items with nothing snappy to show (e.g. multi-character math expressions). */
-function previewChip(item: LearningItem): { kind: "emoji" | "swatch" | "glyph"; value: string } | null {
+/** A small image / emoji / color swatch / short glyph to tease what's inside a category — skips items with nothing snappy to show (e.g. multi-character math expressions). */
+function previewChip(item: LearningItem): { kind: "image" | "emoji" | "swatch" | "glyph"; value: string } | null {
+  if (item.image) return { kind: "image", value: item.image };
   if (item.icon) return { kind: "emoji", value: item.icon };
   if (item.visualColor) return { kind: "swatch", value: item.visualColor };
   if (item.symbol && item.symbol.length <= 3) return { kind: "glyph", value: item.symbol };
@@ -194,6 +195,8 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
                     className="size-6 rounded-full border-2 border-white/50"
                     style={{ backgroundColor: chip.value }}
                   />
+                ) : chip.kind === "image" ? (
+                  <img src={chip.value} alt="" className="size-6" />
                 ) : (
                   chip.value
                 )}

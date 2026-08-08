@@ -50,6 +50,9 @@ export function createCategoryQuestion(category: LearningCategory): QuizQuestion
 
   return {
     prompt: glyph || "Find the answer",
+    // Some items (a few fruits/vegetables with no real emoji) show a small
+    // illustration instead of a text glyph — see `LearningItem.image`.
+    promptImage: item.image,
     correctAnswer: item.label,
     options: buildOptions(item.label, distractors),
   };

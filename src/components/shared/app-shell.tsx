@@ -5,7 +5,13 @@ import { SiteFooter } from "./site-footer";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    // Deliberately no `bg-background` here: this box spans the full
+    // viewport in normal document flow, so an opaque fill would paint over
+    // (and completely hide) the fixed, negative-z-index `<AnimatedBackground>`
+    // blobs/sparkles rendered earlier in `RootLayout` — leaving the app
+    // looking like flat, ambient-free color. `body` still carries its own
+    // background as the base fill beneath everything.
+    <div className="flex min-h-screen flex-col">
       <AppHeader />
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 pt-6 md:px-8">
         <SideNav />

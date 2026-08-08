@@ -1,25 +1,56 @@
 "use client";
 
 import { forwardRef, useImperativeHandle } from "react";
+import { cn } from "@/lib/utils";
 import { useTracePad, type DrawTool, type ToolSize } from "./use-trace-pad";
 
 export interface TraceCanvasHandle {
   clear: () => void;
+  undo: () => void;
+  /** PNG data URL of the current drawing on a white background, or `null` if the canvas isn't ready. */
+  exportImage: () => string | null;
+  /** True when nothing has been drawn yet (see `useTracePad`'s `isBlank` for the `guideText=""` caveat). */
+  isBlank: () => boolean;
 }
 
 export const TraceCanvas = forwardRef<
   TraceCanvasHandle,
-  { guideText: string; strokeColor: string; tool?: DrawTool; size?: ToolSize }
->(function TraceCanvas({ guideText, strokeColor, tool, size }, ref) {
-  const { canvasRef, containerRef, clear, handlePointerDown, handlePointerMove, handlePointerUp } =
-    useTracePad({ guideText, strokeColor, tool, size });
+  {
+    guideText: string;
+    strokeColor: string;
+    tool?: DrawTool;
+    size?: ToolSize;
+    onCanUndoChange?: (canUndo: boolean) => void;
+    /** Overrides the container's default `aspect-square w-full max-w-md` sizing —
+     * e.g. a shorter aspect ratio so the whole toolbar fits on screen with it. */
+    containerClassName?: string;
+  }
+>(function TraceCanvas({ guideText, strokeColor, tool, size, onCanUndoChange, containerClassName }, ref) {
+  const {
+    canvasRef,
+    containerRef,
+    clear,
+    undo,
+    exportPng,
+    isBlank,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+  } = useTracePad({ guideText, strokeColor, tool, size, onCanUndoChange });
 
-  useImperativeHandle(ref, () => ({ clear }), [clear]);
+  useImperativeHandle(
+    ref,
+    () => ({ clear, undo, exportImage: exportPng, isBlank }),
+    [clear, undo, exportPng, isBlank],
+  );
 
   return (
     <div
       ref={containerRef}
-      className="aspect-square w-full max-w-md self-center overflow-hidden rounded-3xl border border-border bg-card shadow-lg"
+      className={cn(
+        "aspect-square w-full max-w-md self-center overflow-hidden rounded-3xl border border-border bg-card shadow-lg",
+        containerClassName,
+      )}
     >
       <canvas
         ref={canvasRef}

@@ -6,9 +6,14 @@ const NAMES = [
   "Toe", "Hair", "Teeth", "Tongue", "Neck", "Shoulder", "Knee", "Elbow", "Chest", "Back",
 ] as const;
 
+// Every body part has its own distinct icon — no two entries share a
+// picture. Unicode doesn't have dedicated emoji for toe, knee, elbow, or
+// back, so those use the closest distinct stand-in (a kneeling person for
+// "knee", a backpack — worn on your back — for "back", etc.) instead of
+// reusing foot/leg/arm's exact icon.
 const ICONS = [
   "👁️", "👂", "👃", "👄", "✋", "💪", "🦵", "🙂", "☝️", "🦶",
-  "🦶", "💇", "🦷", "👅", "🧣", "🤷", "🦵", "💪", "🫁", "🔙",
+  "🔟", "💇", "🦷", "👅", "🧣", "🤷", "🧎", "🦾", "🫁", "🎒",
 ] as const;
 
 export const bodyPartsCategory: LearningCategory = {

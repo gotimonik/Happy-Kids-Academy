@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 export const COLOR_PALETTE = [
   "#EE6352", "#FFD166", "#45AAF2", "#37C183", "#A45EEA", "#FF9F43", "#2D3447", "#FFFFFF",
@@ -77,6 +77,12 @@ export type ColoringRegion = string;
 
 export const UNCOLORED_FILL = "#F1F2F6";
 
+// How many fills/clears back "Undo" can step through, per picture. Kept
+// modest — these are plain color-string objects (not pixel data), so memory
+// isn't a real concern, but there's no reason to remember more than a kid
+// would ever want to walk back.
+const MAX_HISTORY = 50;
+
 function regionsForScene(sceneId: SceneId): readonly string[] {
   return isStructureScene(sceneId) ? STRUCTURE_REGIONS[sceneId] : ["shape"];
 }
@@ -85,33 +91,74 @@ function defaultFillsForScene(sceneId: SceneId): Record<string, string> {
   return Object.fromEntries(regionsForScene(sceneId).map((region) => [region, UNCOLORED_FILL]));
 }
 
-function initialFillsByScene(): Record<SceneId, Record<string, string>> {
+interface SceneColoringState {
+  readonly fills: Record<string, string>;
+  /** Fill snapshots taken just before each change, most recent last. */
+  readonly history: ReadonlyArray<Record<string, string>>;
+}
+
+function initialSceneState(sceneId: SceneId): SceneColoringState {
+  return { fills: defaultFillsForScene(sceneId), history: [] };
+}
+
+function initialStateByScene(): Record<SceneId, SceneColoringState> {
   return Object.fromEntries(
-    SCENES.map((scene) => [scene.id, defaultFillsForScene(scene.id)] as const),
-  ) as Record<SceneId, Record<string, string>>;
+    SCENES.map((scene) => [scene.id, initialSceneState(scene.id)] as const),
+  ) as Record<SceneId, SceneColoringState>;
 }
 
 export function useColoringGame() {
   const [selectedColor, setSelectedColor] = useState<string>(COLOR_PALETTE[0]);
   const [sceneId, setSceneId] = useState<SceneId>("house");
-  // Each scene keeps its own fills, so switching pictures and back doesn't
-  // lose progress on either one — every picture stays colored in for the
-  // rest of the session.
-  const [fillsByScene, setFillsByScene] = useState<Record<SceneId, Record<string, string>>>(initialFillsByScene);
+  // Each scene keeps its own fills (and its own undo history), so switching
+  // pictures and back doesn't lose progress — or undo steps — on either one.
+  const [stateByScene, setStateByScene] = useState<Record<SceneId, SceneColoringState>>(initialStateByScene);
+
+  const current = stateByScene[sceneId];
 
   const fillRegion = useCallback(
     (region: ColoringRegion) => {
-      setFillsByScene((prev) => ({
-        ...prev,
-        [sceneId]: { ...prev[sceneId], [region]: selectedColor },
-      }));
+      setStateByScene((prev) => {
+        const scene = prev[sceneId];
+        if (scene.fills[region] === selectedColor) return prev;
+        return {
+          ...prev,
+          [sceneId]: {
+            fills: { ...scene.fills, [region]: selectedColor },
+            history: [...scene.history, scene.fills].slice(-MAX_HISTORY),
+          },
+        };
+      });
     },
     [sceneId, selectedColor],
   );
 
-  const reset = useCallback(() => {
-    setFillsByScene((prev) => ({ ...prev, [sceneId]: defaultFillsForScene(sceneId) }));
+  const undo = useCallback(() => {
+    setStateByScene((prev) => {
+      const scene = prev[sceneId];
+      const previousFills = scene.history.at(-1);
+      if (!previousFills) return prev;
+      return {
+        ...prev,
+        [sceneId]: { fills: previousFills, history: scene.history.slice(0, -1) },
+      };
+    });
   }, [sceneId]);
+
+  const reset = useCallback(() => {
+    setStateByScene((prev) => {
+      const scene = prev[sceneId];
+      return {
+        ...prev,
+        [sceneId]: {
+          fills: defaultFillsForScene(sceneId),
+          history: [...scene.history, scene.fills].slice(-MAX_HISTORY),
+        },
+      };
+    });
+  }, [sceneId]);
+
+  const canUndo = useMemo(() => current.history.length > 0, [current.history]);
 
   return {
     selectedColor,
@@ -119,8 +166,10 @@ export function useColoringGame() {
     sceneId,
     setSceneId,
     scenes: SCENES,
-    fills: fillsByScene[sceneId],
+    fills: current.fills,
     fillRegion,
+    undo,
+    canUndo,
     reset,
   };
 }

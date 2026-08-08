@@ -6,6 +6,12 @@ export interface QuizQuestion {
    * hex value, not encoded in `prompt` itself.
    */
   readonly promptColor?: string;
+  /**
+   * When set, the picture prompt is shown as this illustration instead of
+   * `prompt`'s text glyph — used for items that don't have a real emoji
+   * (see `LearningItem.image`).
+   */
+  readonly promptImage?: string;
   readonly correctAnswer: string;
   readonly options: readonly string[];
 }
