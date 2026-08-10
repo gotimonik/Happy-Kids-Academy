@@ -3,6 +3,7 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
 import { StaticLink as Link } from "./static-link";
@@ -16,13 +17,14 @@ import { StaticLink as Link } from "./static-link";
  */
 export function MobileNavDrawer() {
   const pathname = usePathname();
+  const t = useTranslation();
 
   return (
     <DialogPrimitive.Root>
       <DialogPrimitive.Trigger asChild>
         <button
           type="button"
-          aria-label="Open menu"
+          aria-label={t("nav.openMenu")}
           className="flex size-9 shrink-0 items-center justify-center rounded-xl text-white transition-colors hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:hidden"
         >
           <Menu className="size-5" aria-hidden="true" />
@@ -39,15 +41,15 @@ export function MobileNavDrawer() {
           }}
         >
           <div className="mb-3 flex items-center justify-between">
-            <DialogPrimitive.Title className="font-display text-lg font-bold">Menu</DialogPrimitive.Title>
+            <DialogPrimitive.Title className="font-display text-lg font-bold">{t("nav.menu")}</DialogPrimitive.Title>
             <DialogPrimitive.Close className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring">
               <X className="size-5" aria-hidden="true" />
-              <span className="sr-only">Close menu</span>
+              <span className="sr-only">{t("nav.closeMenu")}</span>
             </DialogPrimitive.Close>
           </div>
 
           <nav aria-label="Primary" className="flex flex-1 flex-col gap-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon, color }) => {
+            {NAV_ITEMS.map(({ href, labelKey, icon: Icon, color }) => {
               const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
               return (
                 <DialogPrimitive.Close key={href} asChild>
@@ -74,7 +76,7 @@ export function MobileNavDrawer() {
                     >
                       <Icon className="size-5" />
                     </span>
-                    {label}
+                    {t(labelKey)}
                   </Link>
                 </DialogPrimitive.Close>
               );

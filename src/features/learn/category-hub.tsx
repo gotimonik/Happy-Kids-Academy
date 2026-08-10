@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import { StaticLink as Link } from "@/components/shared/static-link";
 import { SegmentedToggle } from "@/components/shared/segmented-toggle";
 import { useDisplayCategory } from "@/lib/categories/use-display-category";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 import { useProgressStore } from "@/store/progress-store";
 import { useSettingsStore } from "@/store/settings-store";
@@ -80,19 +81,20 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
   const setAlphabetCase = useSettingsStore((state) => state.setAlphabetCase);
   const setNumberScript = useSettingsStore((state) => state.setNumberScript);
   const displayCategory = useDisplayCategory(category);
+  const t = useTranslation();
 
   const tiles: ActionTile[] = [
     {
       href: `/learn/${category.slug}/lesson`,
-      title: "Learn",
-      subtitle: `Explore ${category.items.length} cards`,
+      title: t("learn.tile.learnTitle"),
+      subtitle: t("learn.tile.learnSubtitle", { count: category.items.length }),
       icon: BookOpen,
       color: category.color,
     },
     {
       href: `/learn/${category.slug}/quiz`,
-      title: "Play Quiz",
-      subtitle: "10 fun questions",
+      title: t("learn.tile.quizTitle"),
+      subtitle: t("learn.tile.quizSubtitle"),
       icon: Target,
       color: QUIZ_COLOR,
     },
@@ -101,8 +103,8 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
   if (category.trace) {
     tiles.push({
       href: `/learn/${category.slug}/practice`,
-      title: "Writing Practice",
-      subtitle: "Trace and draw",
+      title: t("learn.tile.practiceTitle"),
+      subtitle: t("learn.tile.practiceSubtitle"),
       icon: PenLine,
       color: PRACTICE_COLOR,
       wide: true,

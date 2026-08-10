@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfettiOverlay } from "@/components/shared/confetti-overlay";
 import { useChime } from "@/lib/audio/use-chime";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import type { QuizResult } from "@/types/quiz";
 
 export function CelebrateScreen({
@@ -17,6 +18,7 @@ export function CelebrateScreen({
   onBackHome: () => void;
 }) {
   const { playWinChime } = useChime();
+  const t = useTranslation();
 
   useEffect(() => {
     playWinChime();
@@ -27,10 +29,10 @@ export function CelebrateScreen({
     <div className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center shadow-lg">
       <ConfettiOverlay />
       <h2 className="font-display text-3xl font-bold">
-        {result.score >= result.totalRounds * 0.8 ? "Amazing!" : "Well done!"}
+        {result.score >= result.totalRounds * 0.8 ? t("quiz.amazing") : t("quiz.wellDone")}
       </h2>
       <p className="text-lg font-bold text-primary">
-        You scored {result.score} out of {result.totalRounds}
+        {t("quiz.scoreLine", { score: result.score, total: result.totalRounds })}
       </p>
       <div className="flex gap-1 text-warning" aria-label={`${result.starsEarned} out of 3 stars`}>
         {Array.from({ length: 3 }, (_, i) => (
@@ -42,14 +44,18 @@ export function CelebrateScreen({
           />
         ))}
       </div>
-      <p className="text-sm font-bold text-[#E17055]">+{result.coinsEarned} coins</p>
+      <p className="text-sm font-bold text-[#E17055]">{t("quiz.coinsEarned", { count: result.coinsEarned })}</p>
 
-      <div className="mt-2 flex w-full flex-col gap-2 sm:flex-row">
-        <Button type="button" size="md" className="flex-1" onClick={onPlayAgain}>
-          Play Again
+      {/* "kid" size (64px tall, roomier gap) matches every other primary
+          button in the app — this pair was still on the smaller "md" size
+          (44px), which read as cramped and hard to tap next to everything
+          else on a phone. */}
+      <div className="mt-4 flex w-full flex-col gap-3 sm:flex-row">
+        <Button type="button" size="kid" className="flex-1" onClick={onPlayAgain}>
+          {t("common.playAgain")}
         </Button>
-        <Button type="button" variant="secondary" size="md" className="flex-1" onClick={onBackHome}>
-          Back to Home
+        <Button type="button" variant="secondary" size="kid" className="flex-1" onClick={onBackHome}>
+          {t("common.backToHome")}
         </Button>
       </div>
     </div>

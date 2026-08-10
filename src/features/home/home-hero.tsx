@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { LevelBadge } from "@/components/shared/level-badge";
 import { Skeleton } from "@/components/shared/skeleton-card";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { heroGradient } from "@/lib/ui/tile-gradient";
 
 /**
@@ -31,6 +32,7 @@ function HomeHeroSkeleton() {
 
 export function HomeHero() {
   const [mounted, setMounted] = useState(false);
+  const t = useTranslation();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -61,7 +63,7 @@ export function HomeHero() {
       </span>
 
       <h1 className="relative font-display text-2xl font-bold sm:text-3xl">Happy Kids Academy</h1>
-      <p className="relative mt-1 text-sm text-white/85 sm:text-base">Learn • Play • Grow ✨</p>
+      <p className="relative mt-1 text-sm text-white/85 sm:text-base">{t("home.tagline")}</p>
       <div className="relative mt-4">
         <LevelBadge />
       </div>

@@ -1,14 +1,19 @@
+"use client";
+
 import { Heart } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { StaticLink as Link } from "./static-link";
 
 const FOOTER_LINKS = [
-  { href: "/privacy-policy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms of Use" },
-  { href: "/disclaimer", label: "Disclaimer" },
-  { href: "/accessibility", label: "Accessibility" },
+  { href: "/privacy-policy", labelKey: "footer.privacyPolicy" },
+  { href: "/terms", labelKey: "footer.termsOfUse" },
+  { href: "/disclaimer", labelKey: "footer.disclaimer" },
+  { href: "/accessibility", labelKey: "footer.accessibility" },
 ] as const;
 
 export function SiteFooter() {
+  const t = useTranslation();
+
   return (
     <footer className="relative mt-10 border-t border-border bg-muted/40">
       <span
@@ -17,7 +22,8 @@ export function SiteFooter() {
       />
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-8 text-center md:px-8">
         <p className="flex items-center gap-1.5 font-display text-sm font-bold text-foreground">
-          Made with <Heart className="size-4 fill-current text-[#E17055]" aria-hidden="true" /> for curious minds
+          {t("footer.taglineBefore")} <Heart className="size-4 fill-current text-[#E17055]" aria-hidden="true" />{" "}
+          {t("footer.taglineAfter")}
         </p>
         <nav aria-label="Legal">
           <ul className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2">
@@ -27,15 +33,13 @@ export function SiteFooter() {
                   href={link.href}
                   className="rounded-full px-3 py-1 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
-        <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Happy Kids Academy. Works fully offline — no ads, no accounts, no data leaves this device.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("footer.copyright", { year: new Date().getFullYear() })}</p>
       </div>
     </footer>
   );

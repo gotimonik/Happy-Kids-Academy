@@ -35,7 +35,7 @@ export function PracticePageClient({ category }: { category: LearningCategory })
         <Button
           type="button"
           size="md"
-          style={{ backgroundColor: category.color }}
+          accentColor={category.color}
           className="text-white hover:brightness-110"
           onClick={() => setIndex((i) => (i + 1) % guides.length)}
         >

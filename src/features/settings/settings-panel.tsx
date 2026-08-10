@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/shared/skeleton-card";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { useStoreHydrated } from "@/lib/use-store-hydrated";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 import { trackEvent } from "@/lib/analytics/track-event";
@@ -89,6 +90,7 @@ export function SettingsPanel() {
   const resetProgress = useProgressStore((state) => state.resetProgress);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const hydrated = useStoreHydrated(useSettingsStore);
+  const t = useTranslation();
 
   if (!hydrated) return <SettingsPanelSkeleton />;
 
@@ -107,8 +109,8 @@ export function SettingsPanel() {
           <SettingsIcon className="size-7" aria-hidden="true" />
         </span>
         <div className="relative">
-          <h1 className="font-display text-2xl font-bold">Settings</h1>
-          <p className="mt-0.5 text-sm text-white/85">Language, sound, and more</p>
+          <h1 className="font-display text-2xl font-bold">{t("settings.title")}</h1>
+          <p className="mt-0.5 text-sm text-white/85">{t("settings.subtitle")}</p>
         </div>
       </div>
 
@@ -116,7 +118,7 @@ export function SettingsPanel() {
         index={0}
         accentColor="#45AAF2"
         icon={<Globe className="size-5" />}
-        label="Language"
+        label={t("settings.language")}
         control={
           <Button
             type="button"
@@ -134,14 +136,14 @@ export function SettingsPanel() {
         index={1}
         accentColor="#6C5CE7"
         icon={<Volume2 className="size-5" />}
-        label="Voice"
+        label={t("settings.voice")}
         control={<Switch checked={voiceOn} onCheckedChange={toggleVoice} aria-label="Toggle voice" />}
       />
       <SettingRow
         index={2}
         accentColor="#FF69B4"
         icon={<Music className="size-5" />}
-        label="Music"
+        label={t("settings.music")}
         control={<Switch checked={musicOn} onCheckedChange={toggleMusic} aria-label="Toggle music" />}
       />
 
@@ -152,22 +154,19 @@ export function SettingsPanel() {
               index={3}
               accentColor="#E74C3C"
               icon={<RotateCcw className="size-5" />}
-              label="Reset Progress"
-              control={<span className="text-sm text-muted-foreground">Tap to reset</span>}
+              label={t("settings.resetProgress")}
+              control={<span className="text-sm text-muted-foreground">{t("settings.tapToReset")}</span>}
             />
           </button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset all progress?</DialogTitle>
-            <DialogDescription>
-              This clears stars, coins, badges, and lesson history. Language and sound settings are
-              kept. This cannot be undone.
-            </DialogDescription>
+            <DialogTitle>{t("settings.resetConfirmTitle")}</DialogTitle>
+            <DialogDescription>{t("settings.resetConfirmDescription")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -177,15 +176,13 @@ export function SettingsPanel() {
                 setConfirmOpen(false);
               }}
             >
-              Reset progress
+              {t("settings.resetConfirmButton")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        This app works fully offline once loaded.
-      </p>
+      <p className="mt-4 text-center text-sm text-muted-foreground">{t("settings.offlineNote")}</p>
       <p className="text-center text-xs text-muted-foreground">Happy Kids Academy</p>
     </div>
   );

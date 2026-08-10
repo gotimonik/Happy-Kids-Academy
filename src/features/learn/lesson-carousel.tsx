@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { useProgressStore } from "@/store/progress-store";
 import type { LearningCategory } from "@/types/category";
@@ -18,6 +19,7 @@ export function LessonCarousel({
 }) {
   const [index, setIndex] = useState(0);
   const incrementLessonsCompleted = useProgressStore((state) => state.incrementLessonsCompleted);
+  const t = useTranslation();
   const total = category.items.length;
   const item = category.items[index];
 
@@ -67,16 +69,16 @@ export function LessonCarousel({
           disabled={index === 0}
         >
           <ChevronLeft className="size-5" aria-hidden="true" />
-          Back
+          {t("learn.back")}
         </Button>
         <Button
           type="button"
           size="md"
           className="flex-1"
-          style={{ backgroundColor: category.color }}
+          accentColor={category.color}
           onClick={goNext}
         >
-          {index < total - 1 ? "Next" : "Finish"}
+          {index < total - 1 ? t("learn.next") : t("learn.finish")}
           <ChevronRight className="size-5" aria-hidden="true" />
         </Button>
       </div>

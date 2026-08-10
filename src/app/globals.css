@@ -260,6 +260,34 @@
   }
 }
 
+@layer components {
+  /*
+   * Shared "tactile" gloss overlay for the app's buttons — `Button`
+   * (components/ui/button.tsx), the Drawing/Coloring toolbar icon buttons,
+   * and quiz answer options all apply this class. Each of those also sets
+   * its own colored 3D "lip" box-shadow (has to vary per button/color, so
+   * that part lives with each component instead of here), but the top
+   * highlight below never changes, so it only needs to exist once.
+   *
+   * Fades out well before the vertical middle of the button — where a
+   * label or icon sits — so it never washes out the button's own content.
+   */
+  .btn-tactile {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 8px;
+  }
+  .btn-tactile::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to bottom, color-mix(in srgb, white 30%, transparent) 0%, transparent 42%);
+    pointer-events: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

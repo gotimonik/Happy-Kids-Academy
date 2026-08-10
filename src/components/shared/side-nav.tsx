@@ -5,6 +5,7 @@ import { Sparkle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/shared/skeleton-card";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
 import { StaticLink as Link } from "./static-link";
@@ -41,6 +42,7 @@ function SideNavSkeleton() {
 export function SideNav() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const t = useTranslation();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -56,10 +58,10 @@ export function SideNav() {
     >
       <div className="flex items-center gap-1.5 px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
         <Sparkle className="size-3.5" aria-hidden="true" />
-        Menu
+        {t("nav.menu")}
       </div>
 
-      {NAV_ITEMS.map(({ href, label, icon: Icon, color }, index) => {
+      {NAV_ITEMS.map(({ href, labelKey, icon: Icon, color }, index) => {
         const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
           <motion.div
@@ -107,7 +109,7 @@ export function SideNav() {
               >
                 <Icon className="size-5" />
               </span>
-              {label}
+              {t(labelKey)}
             </Link>
           </motion.div>
         );

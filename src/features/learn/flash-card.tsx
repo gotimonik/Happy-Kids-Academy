@@ -5,6 +5,7 @@ import { Sparkles, Volume2 } from "lucide-react";
 import { Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LivingIcon } from "@/components/shared/living-icon";
+import { useTranslation } from "@/lib/i18n/use-translation";
 import { useSpeechSynthesis } from "@/lib/speech/use-speech-synthesis";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 import type { LearningItem } from "@/types/item";
@@ -51,6 +52,7 @@ function IconMedallion({ accentColor, children }: { accentColor: string; childre
 
 export function FlashCard({ item, accentColor }: { item: LearningItem; accentColor: string }) {
   const { speak } = useSpeechSynthesis();
+  const t = useTranslation();
   const pronounceText = item.speech || item.label;
 
   return (
@@ -143,14 +145,15 @@ export function FlashCard({ item, accentColor }: { item: LearningItem; accentCol
         <Button
           type="button"
           size="md"
+          accentColor={accentColor}
           style={tileGradient(accentColor)}
-          className="text-white shadow-md hover:brightness-110"
+          className="text-white hover:brightness-110"
           onClick={() =>
             speak(pronounceText, { locale: localeForSpeechText(pronounceText) })
           }
         >
           <Volume2 className="size-5" aria-hidden="true" />
-          Pronounce
+          {t("learn.pronounce")}
         </Button>
       </div>
     </div>

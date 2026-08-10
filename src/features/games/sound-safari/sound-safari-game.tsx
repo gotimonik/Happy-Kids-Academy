@@ -59,7 +59,7 @@ export function SoundSafariGame() {
 
       <div className="flex flex-col items-center gap-3 rounded-3xl border border-border bg-card p-8 text-center shadow-md">
         <p className="text-sm text-muted-foreground">Which animal makes this sound?</p>
-        <Button type="button" size="md" style={{ backgroundColor: ACCENT }} className="text-white hover:brightness-110" onClick={replay}>
+        <Button type="button" size="md" accentColor={ACCENT} className="text-white hover:brightness-110" onClick={replay}>
           <Volume2 className="size-5" aria-hidden="true" />
           Play Sound
         </Button>

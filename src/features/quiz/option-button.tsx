@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,17 +49,25 @@ export function OptionButton({
         x: { duration: 0.4, ease: "easeInOut" },
       }}
       whileHover={state === "idle" ? { y: -2, scale: 1.01 } : undefined}
-      whileTap={state === "idle" ? { scale: 0.97 } : undefined}
+      whileTap={state === "idle" ? { scale: 0.96, y: 1 } : undefined}
       className={cn(
-        "flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-5 py-4 text-left text-lg font-bold shadow-sm transition-colors",
+        // Shares the app-wide "tactile" language (see buttonVariants' doc
+        // comment in components/ui/button.tsx) — a colored 3D lip that's
+        // this option's own `accentColor` while idle, or a solid
+        // success/destructive fill with a matching lip once the round
+        // resolves, instead of the old flat bordered card.
+        "btn-tactile flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-5 py-4 text-left text-lg font-bold transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         "disabled:pointer-events-none",
-        state === "idle" && "border-border bg-card hover:shadow-md",
-        state === "correct" && "border-success bg-success text-success-foreground shadow-md",
-        state === "incorrect" && "border-destructive bg-destructive text-destructive-foreground shadow-md",
-        state === "dim" && "border-border bg-card",
+        state === "idle" &&
+          "border-[var(--option-accent)] bg-card shadow-[0_4px_0_0_color-mix(in_srgb,var(--option-accent)_100%,black_15%)] hover:shadow-[0_6px_0_0_color-mix(in_srgb,var(--option-accent)_100%,black_15%),0_10px_16px_-6px_color-mix(in_srgb,var(--option-accent)_50%,transparent)]",
+        state === "correct" &&
+          "border-success bg-success text-success-foreground shadow-[0_4px_0_0_color-mix(in_srgb,var(--success)_100%,black_20%),0_8px_14px_-6px_color-mix(in_srgb,var(--success)_60%,transparent)]",
+        state === "incorrect" &&
+          "border-destructive bg-destructive text-destructive-foreground shadow-[0_4px_0_0_color-mix(in_srgb,var(--destructive)_100%,black_20%),0_8px_14px_-6px_color-mix(in_srgb,var(--destructive)_60%,transparent)]",
+        state === "dim" && "border-border bg-card shadow-none",
       )}
-      style={state === "idle" ? { borderColor: accentColor } : undefined}
+      style={state === "idle" ? ({ "--option-accent": accentColor } as CSSProperties) : undefined}
     >
       <span
         aria-hidden="true"
