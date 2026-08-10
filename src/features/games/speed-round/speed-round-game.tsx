@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfettiOverlay } from "@/components/shared/confetti-overlay";
@@ -8,7 +8,7 @@ import { FeedbackToast } from "@/components/shared/feedback-toast";
 import { OptionButton, type OptionState } from "@/features/quiz/option-button";
 import { QuestionCard } from "@/features/quiz/question-card";
 import { categories } from "@/data/categories";
-import { createMixedQuestion } from "@/lib/quiz/generators";
+import { createMixedQuestionGenerator } from "@/lib/quiz/generators";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/store/progress-store";
@@ -19,8 +19,13 @@ const ACCENT = "#EE6352";
 export function SpeedRoundGame() {
   const addCoins = useProgressStore((state) => state.addCoins);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  // Created once per game session (not once per round!) so its "don't repeat
+  // a question until every item's been asked" memory survives the whole
+  // 60-second round, however many questions that ends up being — see
+  // `createMixedQuestionGenerator`'s doc comment in generators.ts.
+  const generateQuestion = useMemo(() => createMixedQuestionGenerator(categories), []);
   const { question, score, answered, timeLeft, durationSeconds, status, answer, restart } = useSpeedRound({
-    generateQuestion: () => createMixedQuestion(categories),
+    generateQuestion,
     onFinish: (finalScore) => {
       addCoins(finalScore * 2);
       trackEvent("game_complete", { game_id: "speed-round", score: finalScore, answered });
@@ -48,7 +53,7 @@ export function SpeedRoundGame() {
           You answered {score} out of {answered} correctly
         </p>
         <p className="text-sm font-bold text-[#E17055]">+{score * 2} coins</p>
-        <Button type="button" size="kid" onClick={restart}>
+        <Button type="button" size="md" onClick={restart}>
           Play Again
         </Button>
       </div>

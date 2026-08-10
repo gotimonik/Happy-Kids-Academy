@@ -57,6 +57,7 @@ export function DrawingGame() {
   const [size, setSize] = useState<ToolSize>("medium");
   const [canUndo, setCanUndo] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [editingSaved, setEditingSaved] = useState(false);
   const canvasRef = useRef<TraceCanvasHandle | null>(null);
   // Tracks which gallery entry this canvas is currently drawing into, so
   // repeated Save taps on the same picture update it instead of piling up
@@ -70,6 +71,30 @@ export function DrawingGame() {
     return () => {
       if (savedFlashTimeout.current) clearTimeout(savedFlashTimeout.current);
     };
+  }, []);
+
+  // "Edit" from My Drawings links here as `?edit=<id>` — reopen that saved
+  // picture onto the canvas so new strokes land on top of it, and keep
+  // saving into the same gallery entry rather than creating a new one. The
+  // id travels as a query param (not component state) because it has to
+  // survive a full page reload: the native Capacitor app turns this link
+  // into a hard `window.location` navigation (see `StaticLink`), which
+  // clears any in-memory React state from the previous page.
+  useEffect(() => {
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    if (!editId) return;
+    const drawing = useDrawingsStore.getState().drawings.find((entry) => entry.id === editId);
+    if (!drawing) return;
+    currentDrawingId.current = editId;
+    // One-time load triggered by a URL param read on mount, same
+    // "synchronize with an external system" case use-store-hydrated.ts
+    // documents for the same lint rule — not a derived-state anti-pattern.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEditingSaved(true);
+    void canvasRef.current?.loadImage(drawing.dataUrl);
+    // Drop the query param so refreshing this page (or later saving a fresh
+    // "New Canvas" and coming back) doesn't try to reload the same edit.
+    window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
   function flashSaved() {
@@ -96,10 +121,17 @@ export function DrawingGame() {
     saveCurrentDrawing();
     canvasRef.current?.clear();
     currentDrawingId.current = null;
+    setEditingSaved(false);
   }
 
   return (
     <div className="flex flex-col items-center gap-3">
+      {editingSaved && (
+        <p className="rounded-full bg-secondary/60 px-3 py-1 text-xs font-bold text-muted-foreground">
+          Editing your saved drawing
+        </p>
+      )}
+
       {/* Shorter than a full square so the toolbar below always fits on
           screen too — kids shouldn't have to scroll to find a color. */}
       <TraceCanvas

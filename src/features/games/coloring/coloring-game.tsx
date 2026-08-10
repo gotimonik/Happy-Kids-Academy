@@ -11,6 +11,7 @@ import { useColoringSavesStore } from "@/store/coloring-saves-store";
 import { ColoringScene } from "./coloring-scene";
 import {
   COLOR_PALETTE,
+  isValidSceneId,
   SHAPE_SCENES,
   STRUCTURE_SCENES,
   UNCOLORED_FILL,
@@ -69,10 +70,22 @@ function ScenePicker({
 }
 
 export function ColoringGame() {
-  const { selectedColor, setSelectedColor, sceneId, setSceneId, scenes, fills, fillRegion, undo, canUndo, reset } =
-    useColoringGame();
+  const {
+    selectedColor,
+    setSelectedColor,
+    sceneId,
+    setSceneId,
+    scenes,
+    fills,
+    fillRegion,
+    undo,
+    canUndo,
+    reset,
+    loadSceneFills,
+  } = useColoringGame();
 
   const [justSaved, setJustSaved] = useState(false);
+  const [editingSavedSceneId, setEditingSavedSceneId] = useState<SceneId | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Tracks which gallery entry *each picture* is currently saving into, so
   // repeated Save taps on the same one update it instead of piling up
@@ -86,6 +99,39 @@ export function ColoringGame() {
     return () => {
       if (savedFlashTimeout.current) clearTimeout(savedFlashTimeout.current);
     };
+  }, []);
+
+  // "Edit" from My Colorings links here as `?edit=<id>` — reopen that saved
+  // picture's regions so more taps land on the same coloring, and keep
+  // saving into the same gallery entry rather than creating a new one. The
+  // id travels as a query param (not component state) because it has to
+  // survive a full page reload: the native Capacitor app turns this link
+  // into a hard `window.location` navigation (see `StaticLink`), which
+  // clears any in-memory React state from the previous page. Colorings
+  // saved before "Edit" existed have no `sceneId`/`fills` to resume from
+  // (see `coloring-gallery.tsx`, which hides the button for those), so this
+  // silently does nothing for them rather than opening a blank picture.
+  useEffect(() => {
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    if (!editId) return;
+    const saved = useColoringSavesStore.getState().colorings.find((entry) => entry.id === editId);
+    const savedSceneId = saved?.sceneId;
+    const savedFills = saved?.fills;
+    if (!savedSceneId || !savedFills || !isValidSceneId(savedSceneId)) return;
+    setSceneId(savedSceneId);
+    loadSceneFills(savedSceneId, savedFills);
+    currentIdBySceneRef.current[savedSceneId] = editId;
+    // One-time load triggered by a URL param read on mount, same
+    // "synchronize with an external system" case use-store-hydrated.ts
+    // documents for the same lint rule — not a derived-state anti-pattern.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEditingSavedSceneId(savedSceneId);
+    // Drop the query param so refreshing this page (or later saving a fresh
+    // "New Design" and coming back) doesn't try to reload the same edit.
+    window.history.replaceState(null, "", window.location.pathname);
+    // Runs once on mount only — `setSceneId`/`loadSceneFills` are stable
+    // (useCallback with empty/fixed deps), so omitting them isn't stale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function flashSaved() {
@@ -106,6 +152,8 @@ export function ColoringGame() {
       currentIdBySceneRef.current[sceneId] ?? null,
       dataUrl,
       sceneLabel,
+      sceneId,
+      fills,
     );
     return true;
   }
@@ -118,10 +166,17 @@ export function ColoringGame() {
     await saveCurrentPicture();
     reset();
     delete currentIdBySceneRef.current[sceneId];
+    setEditingSavedSceneId((current) => (current === sceneId ? null : current));
   }
 
   return (
     <div className="flex flex-col items-center gap-3">
+      {editingSavedSceneId === sceneId && (
+        <p className="rounded-full bg-secondary/60 px-3 py-1 text-xs font-bold text-muted-foreground">
+          Editing your saved picture
+        </p>
+      )}
+
       <div className="flex w-full max-w-md flex-col items-center gap-1.5">
         <ScenePicker label="Pictures" scenes={STRUCTURE_SCENES} sceneId={sceneId} onSelect={setSceneId} />
         <ScenePicker label="Shapes" scenes={SHAPE_SCENES} sceneId={sceneId} onSelect={setSceneId} />

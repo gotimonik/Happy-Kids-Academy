@@ -9,6 +9,8 @@ export interface TraceCanvasHandle {
   undo: () => void;
   /** PNG data URL of the current drawing on a white background, or `null` if the canvas isn't ready. */
   exportImage: () => string | null;
+  /** Draws a previously-exported PNG onto the canvas as its starting content — used to reopen a saved drawing for editing. */
+  loadImage: (dataUrl: string) => Promise<void>;
   /** True when nothing has been drawn yet (see `useTracePad`'s `isBlank` for the `guideText=""` caveat). */
   isBlank: () => boolean;
 }
@@ -32,6 +34,7 @@ export const TraceCanvas = forwardRef<
     clear,
     undo,
     exportPng,
+    loadImage,
     isBlank,
     handlePointerDown,
     handlePointerMove,
@@ -40,8 +43,8 @@ export const TraceCanvas = forwardRef<
 
   useImperativeHandle(
     ref,
-    () => ({ clear, undo, exportImage: exportPng, isBlank }),
-    [clear, undo, exportPng, isBlank],
+    () => ({ clear, undo, exportImage: exportPng, loadImage, isBlank }),
+    [clear, undo, exportPng, loadImage, isBlank],
   );
 
   return (

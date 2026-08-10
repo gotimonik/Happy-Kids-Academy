@@ -11,8 +11,17 @@ interface ColoringGalleryActions {
    * it rather than piling up near-duplicates), moving it to the front
    * either way. Returns the id to keep saving into — callers should
    * remember it (per scene) for the next save/until "New Design".
+   *
+   * `sceneId`/`fills` are stored alongside the flattened PNG so "Edit" can
+   * later reopen this exact picture's regions instead of just the image.
    */
-  saveColoring: (id: string | null, dataUrl: string, sceneLabel: string) => string;
+  saveColoring: (
+    id: string | null,
+    dataUrl: string,
+    sceneLabel: string,
+    sceneId: string,
+    fills: Record<string, string>,
+  ) => string;
   deleteColoring: (id: string) => void;
 }
 
@@ -38,12 +47,12 @@ export const useColoringSavesStore = create<ColoringGalleryStore>()(
   persist(
     (set, get) => ({
       ...INITIAL_COLORING_GALLERY,
-      saveColoring: (id, dataUrl, sceneLabel) => {
+      saveColoring: (id, dataUrl, sceneLabel, sceneId, fills) => {
         const now = Date.now();
         const existing = id ? get().colorings.find((coloring) => coloring.id === id) : undefined;
 
         if (existing) {
-          const updated: SavedColoring = { ...existing, dataUrl, sceneLabel, updatedAt: now };
+          const updated: SavedColoring = { ...existing, dataUrl, sceneLabel, sceneId, fills, updatedAt: now };
           set((state) => ({
             colorings: [updated, ...state.colorings.filter((coloring) => coloring.id !== existing.id)],
           }));
@@ -54,6 +63,8 @@ export const useColoringSavesStore = create<ColoringGalleryStore>()(
           id: generateId(),
           dataUrl,
           sceneLabel,
+          sceneId,
+          fills,
           createdAt: now,
           updatedAt: now,
         };

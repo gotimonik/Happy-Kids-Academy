@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Images, Trash2 } from "lucide-react";
+import { Check, Download, Images, Pencil, Trash2 } from "lucide-react";
 import { StaticLink } from "@/components/shared/static-link";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { saveImageToDevice } from "@/lib/save-image-to-device";
 import { useStoreHydrated } from "@/lib/use-store-hydrated";
 import { useDrawingsStore } from "@/store/drawings-store";
 import type { SavedDrawing } from "@/types/drawing";
@@ -18,9 +19,18 @@ function formatSavedAt(timestamp: number): string {
   });
 }
 
+type SaveToDeviceState = "idle" | "saving" | "saved" | "error";
+
 function DrawingDialog({ drawing, onClose }: { drawing: SavedDrawing; onClose: () => void }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [saveState, setSaveState] = useState<SaveToDeviceState>("idle");
   const deleteDrawing = useDrawingsStore((state) => state.deleteDrawing);
+
+  async function handleSaveToDevice() {
+    setSaveState("saving");
+    const ok = await saveImageToDevice(drawing.dataUrl, `my-drawing-${drawing.id}.png`);
+    setSaveState(ok ? "saved" : "error");
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -42,10 +52,16 @@ function DrawingDialog({ drawing, onClose }: { drawing: SavedDrawing; onClose: (
             squeeze (and the square corners it was pushing past the card's
             rounded edge) regardless of screen size. */}
         <div className="mt-4 flex flex-col gap-2">
+          <Button asChild size="md" className="w-full">
+            <StaticLink href={`/games/drawing?edit=${drawing.id}`}>
+              <Pencil className="size-5" aria-hidden="true" />
+              Edit drawing
+            </StaticLink>
+          </Button>
           <Button
             type="button"
             variant={confirmingDelete ? "destructive" : "outline"}
-            size="kid"
+            size="md"
             className="w-full"
             onClick={() => {
               if (confirmingDelete) {
@@ -59,14 +75,27 @@ function DrawingDialog({ drawing, onClose }: { drawing: SavedDrawing; onClose: (
             <Trash2 className="size-5" aria-hidden="true" />
             {confirmingDelete ? "Tap again to delete" : "Delete"}
           </Button>
-          <Button asChild variant="outline" size="kid" className="w-full">
-            <a href={drawing.dataUrl} download={`my-drawing-${drawing.id}.png`}>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className="w-full"
+            disabled={saveState === "saving"}
+            onClick={handleSaveToDevice}
+          >
+            {saveState === "saved" ? <Check className="size-5" aria-hidden="true" /> : (
               <Download className="size-5" aria-hidden="true" />
-              Save to device
-            </a>
+            )}
+            {saveState === "saving"
+              ? "Saving…"
+              : saveState === "saved"
+                ? "Saved!"
+                : saveState === "error"
+                  ? "Couldn't save — try again"
+                  : "Save to device"}
           </Button>
           <DialogClose asChild>
-            <Button type="button" size="kid" className="w-full">
+            <Button type="button" size="md" className="w-full">
               Close
             </Button>
           </DialogClose>
@@ -106,7 +135,7 @@ export function DrawingGallery() {
         <p className="text-muted-foreground">
           No drawings saved yet. Make something in the Drawing game, then tap Save!
         </p>
-        <Button asChild size="kid">
+        <Button asChild size="md">
           <StaticLink href="/games/drawing">Go to Drawing</StaticLink>
         </Button>
       </div>

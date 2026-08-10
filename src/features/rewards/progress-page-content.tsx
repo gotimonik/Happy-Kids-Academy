@@ -80,7 +80,7 @@ export function ProgressPageContent() {
         Come learn and play together — it&apos;s free, works offline, and there are no ads or accounts.
       </p>
 
-      <Button asChild size="kid" className="w-full max-w-xs">
+      <Button asChild size="md" className="w-full max-w-xs">
         <StaticLink href="/">Try Happy Kids Academy</StaticLink>
       </Button>
     </div>
@@ -109,7 +109,7 @@ function GenericInvite() {
       <p className="max-w-sm text-sm font-semibold text-muted-foreground">
         Alphabet, numbers, math, shapes, colors, animals, quizzes, and games — free, offline, no ads or accounts.
       </p>
-      <Button asChild size="kid" className="w-full max-w-xs">
+      <Button asChild size="md" className="w-full max-w-xs">
         <StaticLink href="/">Explore Happy Kids Academy</StaticLink>
       </Button>
     </div>

@@ -231,6 +231,37 @@ export function useTracePad({
     return output.toDataURL("image/png");
   }, []);
 
+  // Draws a previously-exported PNG (e.g. a saved drawing reopened for
+  // editing) onto the canvas as its new starting content, stretched to fill
+  // the current backing size — the source image's own pixel dimensions may
+  // not match this device's if it was saved on a different screen. Doesn't
+  // touch the undo stack: the first stroke drawn afterward snapshots this
+  // loaded picture (via `pushHistorySnapshot` in `handlePointerDown`), so
+  // `undo` naturally reverts *to* it rather than past it to a blank canvas.
+  const loadImage = useCallback((dataUrl: string): Promise<void> => {
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      if (!canvas || !ctx) {
+        resolve();
+        return;
+      }
+      const image = new Image();
+      image.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        historyRef.current = [];
+        notifyCanUndo(false);
+        resolve();
+      };
+      // A picture that fails to load (corrupt data URL) just leaves a blank
+      // canvas rather than blocking the caller — same "fail soft" spirit as
+      // the rest of this pad's error handling.
+      image.onerror = () => resolve();
+      image.src = dataUrl;
+    });
+  }, [notifyCanUndo]);
+
   // True when nothing has been drawn — every pixel is still fully
   // transparent. Only meaningful with `guideText=""` (the free-draw canvas):
   // a non-empty guide glyph is itself drawn with partial alpha, which would
@@ -285,6 +316,7 @@ export function useTracePad({
     clear,
     undo,
     exportPng,
+    loadImage,
     isBlank,
     handlePointerDown,
     handlePointerMove,

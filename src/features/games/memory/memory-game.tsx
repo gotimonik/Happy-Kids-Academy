@@ -48,7 +48,7 @@ export function MemoryGame() {
       {isComplete && (
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-success/10 p-5 text-center">
           <p className="font-display text-lg font-bold text-success">All pairs matched! 🎉</p>
-          <Button type="button" size="kid" onClick={reset}>
+          <Button type="button" size="md" onClick={reset}>
             Play Again
           </Button>
         </div>

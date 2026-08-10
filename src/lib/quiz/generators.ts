@@ -2,6 +2,7 @@ import type { LearningCategory } from "@/types/category";
 import type { LearningItem } from "@/types/item";
 import type { QuizQuestion } from "@/types/quiz";
 import { alphabetCategory } from "@/data/categories/alphabet";
+import { createNoRepeatGenerator } from "./no-repeat";
 import { buildOptions, pickDistractors } from "./utils";
 
 /** The glyph actually shown on screen for an item's picture-identification prompt. */
@@ -10,7 +11,9 @@ function displayGlyph(item: LearningItem): string {
 }
 
 /**
- * A standard "identify this card" question, drawn from a single category.
+ * A standard "identify this card" question for one specific item in a
+ * category — the shared core of both the per-category quiz and Mixed Quiz,
+ * which only differ in how they pick *which* item/category to ask about.
  *
  * Two content classes need special handling beyond a plain icon-vs-label quiz:
  *
@@ -26,10 +29,8 @@ function displayGlyph(item: LearningItem): string {
  *    exclude same-glyph items from the distractor pool so the three shown
  *    options are always visually distinguishable from each other.
  */
-export function createCategoryQuestion(category: LearningCategory): QuizQuestion {
+function buildQuestionForItem(category: LearningCategory, item: LearningItem): QuizQuestion {
   const items = category.items;
-  const item = items[Math.floor(Math.random() * items.length)];
-  if (!item) throw new Error(`Category "${category.slug}" has no items`);
 
   if (item.visualColor) {
     const pool = items.map((candidate) => candidate.label);
@@ -58,16 +59,40 @@ export function createCategoryQuestion(category: LearningCategory): QuizQuestion
   };
 }
 
-/** Draws a question from a random category — powers the Mixed Quiz. */
-export function createMixedQuestion(categories: readonly LearningCategory[]): QuizQuestion {
-  const category = categories[Math.floor(Math.random() * categories.length)];
-  if (!category) throw new Error("No categories available for the mixed quiz");
-  return createCategoryQuestion(category);
+/**
+ * One question generator per quiz session for a single category — draws
+ * every item once (in shuffled order) before repeating any of them, so a
+ * category with at least as many items as the quiz has rounds (the common
+ * case) never repeats a question at all. Create one instance per quiz
+ * session (e.g. via `useMemo`) and keep calling it round after round;
+ * calling this factory itself fresh each round would throw the "no repeat"
+ * memory away and defeat the point.
+ */
+export function createCategoryQuestionGenerator(category: LearningCategory): () => QuizQuestion {
+  if (category.items.length === 0) {
+    throw new Error(`Category "${category.slug}" has no items`);
+  }
+  return createNoRepeatGenerator(category.items, (item) => buildQuestionForItem(category, item));
 }
 
-/** "1, 2, __, 4" style sequence with a missing middle number. */
-export function createMissingNumberQuestion(): QuizQuestion {
-  const start = 1 + Math.floor(Math.random() * 90);
+/**
+ * One question generator per Mixed Quiz session, drawing from every item in
+ * every category pooled together — hundreds of possible questions, so a
+ * 10-round quiz essentially never repeats one. Same "create once, call every
+ * round" rule as `createCategoryQuestionGenerator`.
+ */
+export function createMixedQuestionGenerator(categories: readonly LearningCategory[]): () => QuizQuestion {
+  const pool = categories.flatMap((category) =>
+    category.items.map((item) => ({ category, item })),
+  );
+  if (pool.length === 0) {
+    throw new Error("No categories available for the mixed quiz");
+  }
+  return createNoRepeatGenerator(pool, ({ category, item }) => buildQuestionForItem(category, item));
+}
+
+/** "1, 2, __, 4" style sequence with a missing middle number, for one specific starting number. */
+function buildMissingNumberQuestion(start: number): QuizQuestion {
   const answer = start + 2;
   return {
     prompt: `${start}, ${start + 1}, __, ${start + 3}`,
@@ -76,9 +101,15 @@ export function createMissingNumberQuestion(): QuizQuestion {
   };
 }
 
-/** "N is..." Even / Odd question. */
-export function createOddOrEvenQuestion(): QuizQuestion {
-  const n = 1 + Math.floor(Math.random() * 100);
+const MISSING_NUMBER_STARTS = Array.from({ length: 90 }, (_, index) => index + 1);
+
+/** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
+export function createMissingNumberQuestionGenerator(): () => QuizQuestion {
+  return createNoRepeatGenerator(MISSING_NUMBER_STARTS, buildMissingNumberQuestion);
+}
+
+/** "N is..." Even / Odd question, for one specific N. */
+function buildOddOrEvenQuestion(n: number): QuizQuestion {
   const isEven = n % 2 === 0;
   const correctAnswer = isEven ? "Even" : "Odd";
   const wrongAnswer = isEven ? "Odd" : "Even";
@@ -89,10 +120,15 @@ export function createOddOrEvenQuestion(): QuizQuestion {
   };
 }
 
-/** "a × b = ?" multiplication fact. */
-export function createTimesTablesQuestion(): QuizQuestion {
-  const a = 2 + Math.floor(Math.random() * 9);
-  const b = 1 + Math.floor(Math.random() * 10);
+const ODD_OR_EVEN_NUMBERS = Array.from({ length: 100 }, (_, index) => index + 1);
+
+/** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
+export function createOddOrEvenQuestionGenerator(): () => QuizQuestion {
+  return createNoRepeatGenerator(ODD_OR_EVEN_NUMBERS, buildOddOrEvenQuestion);
+}
+
+/** "a × b = ?" multiplication fact, for one specific (a, b) pair. */
+function buildTimesTablesQuestion([a, b]: readonly [number, number]): QuizQuestion {
   const answer = a * b;
   return {
     prompt: `${a} × ${b} = ?`,
@@ -101,11 +137,20 @@ export function createTimesTablesQuestion(): QuizQuestion {
   };
 }
 
-/** "Which word starts with X?" — always drawn from the Alphabet category. */
-export function createWordBuilderQuestion(): QuizQuestion {
+const TIMES_TABLES_PAIRS: ReadonlyArray<readonly [number, number]> = Array.from(
+  { length: 9 },
+  (_, aIndex) => aIndex + 2,
+).flatMap((a) => Array.from({ length: 10 }, (_, bIndex) => [a, bIndex + 1] as const));
+
+/** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
+export function createTimesTablesQuestionGenerator(): () => QuizQuestion {
+  return createNoRepeatGenerator(TIMES_TABLES_PAIRS, buildTimesTablesQuestion);
+}
+
+/** "Which word starts with X?" for one specific letter index — always drawn from the Alphabet category. */
+function buildWordBuilderQuestion(letterIndex: number): QuizQuestion {
   const items = alphabetCategory.items;
-  const index = Math.floor(Math.random() * 26);
-  const item = items[index];
+  const item = items[letterIndex];
   if (!item || !item.symbol) throw new Error("Alphabet data is missing a letter");
 
   const letterCode = item.symbol.charCodeAt(0) - "A".charCodeAt(0);
@@ -119,14 +164,32 @@ export function createWordBuilderQuestion(): QuizQuestion {
   };
 }
 
-/** Arithmetic sequence with a step of 2 or 5, missing the last term. */
-export function createPatternsQuestion(): QuizQuestion {
-  const start = 1 + Math.floor(Math.random() * 10);
-  const step = Math.random() < 0.5 ? 2 : 5;
+const WORD_BUILDER_LETTER_INDEXES = Array.from({ length: 26 }, (_, index) => index);
+
+/** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
+export function createWordBuilderQuestionGenerator(): () => QuizQuestion {
+  return createNoRepeatGenerator(WORD_BUILDER_LETTER_INDEXES, buildWordBuilderQuestion);
+}
+
+/** Arithmetic sequence missing its last term, for one specific (start, step) pair. */
+function buildPatternsQuestion([start, step]: readonly [number, number]): QuizQuestion {
   const answer = start + step * 3;
   return {
     prompt: `${start}, ${start + step}, ${start + step * 2}, __`,
     correctAnswer: String(answer),
     options: buildOptions(String(answer), [String(answer - step), String(answer + step)]),
   };
+}
+
+const PATTERNS_PAIRS: ReadonlyArray<readonly [number, number]> = Array.from(
+  { length: 10 },
+  (_, index) => index + 1,
+).flatMap((start) => [
+  [start, 2],
+  [start, 5],
+] as const);
+
+/** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
+export function createPatternsQuestionGenerator(): () => QuizQuestion {
+  return createNoRepeatGenerator(PATTERNS_PAIRS, buildPatternsQuestion);
 }

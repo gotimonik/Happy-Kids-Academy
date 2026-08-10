@@ -28,13 +28,13 @@ export function PracticePageClient({ category }: { category: LearningCategory })
       <TraceCanvas key={index} ref={canvasRef} guideText={guideText} strokeColor={category.color} />
 
       <div className="flex justify-center gap-3">
-        <Button type="button" variant="outline" size="kid" onClick={() => canvasRef.current?.clear()}>
+        <Button type="button" variant="outline" size="md" onClick={() => canvasRef.current?.clear()}>
           <Eraser className="size-5" aria-hidden="true" />
           Clear
         </Button>
         <Button
           type="button"
-          size="kid"
+          size="md"
           style={{ backgroundColor: category.color }}
           className="text-white hover:brightness-110"
           onClick={() => setIndex((i) => (i + 1) % guides.length)}

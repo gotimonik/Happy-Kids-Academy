@@ -80,7 +80,7 @@ export function MatchingGame() {
       </div>
 
       {allMatched && (
-        <Button type="button" size="kid" onClick={nextRound} className="self-center">
+        <Button type="button" size="md" onClick={nextRound} className="self-center">
           Next Matching Round ›
         </Button>
       )}

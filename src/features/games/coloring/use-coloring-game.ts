@@ -72,6 +72,13 @@ export function isStructureScene(sceneId: SceneId): sceneId is StructureSceneId 
   return STRUCTURE_IDS.has(sceneId);
 }
 
+const SCENE_IDS: ReadonlySet<string> = new Set(SCENES.map((scene) => scene.id));
+
+/** True when `value` is one of the known scene ids — guards data read back from a saved coloring, which is just a plain string on disk. */
+export function isValidSceneId(value: string): value is SceneId {
+  return SCENE_IDS.has(value);
+}
+
 /** A colorable sub-area within a scene — several named areas for structures, just "shape" for plain shapes. */
 export type ColoringRegion = string;
 
@@ -160,6 +167,22 @@ export function useColoringGame() {
 
   const canUndo = useMemo(() => current.history.length > 0, [current.history]);
 
+  // Reopens a saved coloring's regions onto the given scene — used by
+  // "Edit" from My Colorings. Missing regions fall back to uncolored rather
+  // than `undefined` (defensive: `fills` came off a saved record, which
+  // could in principle predate a region being added/renamed on that scene).
+  // Starts with an empty undo history, same as switching to a fresh scene —
+  // there's nothing to undo back to before the loaded picture itself.
+  const loadSceneFills = useCallback((targetSceneId: SceneId, fills: Readonly<Record<string, string>>) => {
+    setStateByScene((prev) => ({
+      ...prev,
+      [targetSceneId]: {
+        fills: { ...defaultFillsForScene(targetSceneId), ...fills },
+        history: [],
+      },
+    }));
+  }, []);
+
   return {
     selectedColor,
     setSelectedColor,
@@ -171,5 +194,6 @@ export function useColoringGame() {
     undo,
     canUndo,
     reset,
+    loadSceneFills,
   };
 }

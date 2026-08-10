@@ -54,7 +54,7 @@ export function SimonPatternGame() {
           <p className="font-display text-lg font-bold text-destructive">
             You reached level {level}!
           </p>
-          <Button type="button" size="kid" onClick={start}>
+          <Button type="button" size="md" onClick={start}>
             Play Again
           </Button>
         </div>

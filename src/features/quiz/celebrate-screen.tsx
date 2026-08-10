@@ -45,10 +45,10 @@ export function CelebrateScreen({
       <p className="text-sm font-bold text-[#E17055]">+{result.coinsEarned} coins</p>
 
       <div className="mt-2 flex w-full flex-col gap-2 sm:flex-row">
-        <Button type="button" size="kid" className="flex-1" onClick={onPlayAgain}>
+        <Button type="button" size="md" className="flex-1" onClick={onPlayAgain}>
           Play Again
         </Button>
-        <Button type="button" variant="secondary" size="kid" className="flex-1" onClick={onBackHome}>
+        <Button type="button" variant="secondary" size="md" className="flex-1" onClick={onBackHome}>
           Back to Home
         </Button>
       </div>

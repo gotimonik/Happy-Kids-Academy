@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Images, Trash2 } from "lucide-react";
+import { Check, Download, Images, Pencil, Trash2 } from "lucide-react";
 import { StaticLink } from "@/components/shared/static-link";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { saveImageToDevice } from "@/lib/save-image-to-device";
 import { useStoreHydrated } from "@/lib/use-store-hydrated";
 import { useColoringSavesStore } from "@/store/coloring-saves-store";
 import type { SavedColoring } from "@/types/coloring";
@@ -18,9 +19,18 @@ function formatSavedAt(timestamp: number): string {
   });
 }
 
+type SaveToDeviceState = "idle" | "saving" | "saved" | "error";
+
 function ColoringDialog({ coloring, onClose }: { coloring: SavedColoring; onClose: () => void }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [saveState, setSaveState] = useState<SaveToDeviceState>("idle");
   const deleteColoring = useColoringSavesStore((state) => state.deleteColoring);
+
+  async function handleSaveToDevice() {
+    setSaveState("saving");
+    const ok = await saveImageToDevice(coloring.dataUrl, `my-coloring-${coloring.id}.png`);
+    setSaveState(ok ? "saved" : "error");
+  }
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -41,10 +51,23 @@ function ColoringDialog({ coloring, onClose }: { coloring: SavedColoring; onClos
             three "kid"-sized buttons with real text labels don't fit side
             by side inside a max-w-md dialog. */}
         <div className="mt-4 flex flex-col gap-2">
+          {/* Only colorings saved after "Edit" shipped carry `sceneId`/`fills`
+              (the region data needed to reopen this exact picture) — older
+              ones are a flattened PNG only, so there's nothing to resume
+              coloring into and the button is left off rather than offering
+              something that can't work. */}
+          {coloring.sceneId && coloring.fills && (
+            <Button asChild size="md" className="w-full">
+              <StaticLink href={`/games/coloring?edit=${coloring.id}`}>
+                <Pencil className="size-5" aria-hidden="true" />
+                Edit coloring
+              </StaticLink>
+            </Button>
+          )}
           <Button
             type="button"
             variant={confirmingDelete ? "destructive" : "outline"}
-            size="kid"
+            size="md"
             className="w-full"
             onClick={() => {
               if (confirmingDelete) {
@@ -58,14 +81,27 @@ function ColoringDialog({ coloring, onClose }: { coloring: SavedColoring; onClos
             <Trash2 className="size-5" aria-hidden="true" />
             {confirmingDelete ? "Tap again to delete" : "Delete"}
           </Button>
-          <Button asChild variant="outline" size="kid" className="w-full">
-            <a href={coloring.dataUrl} download={`my-coloring-${coloring.id}.png`}>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            className="w-full"
+            disabled={saveState === "saving"}
+            onClick={handleSaveToDevice}
+          >
+            {saveState === "saved" ? <Check className="size-5" aria-hidden="true" /> : (
               <Download className="size-5" aria-hidden="true" />
-              Save to device
-            </a>
+            )}
+            {saveState === "saving"
+              ? "Saving…"
+              : saveState === "saved"
+                ? "Saved!"
+                : saveState === "error"
+                  ? "Couldn't save — try again"
+                  : "Save to device"}
           </Button>
           <DialogClose asChild>
-            <Button type="button" size="kid" className="w-full">
+            <Button type="button" size="md" className="w-full">
               Close
             </Button>
           </DialogClose>
@@ -105,7 +141,7 @@ export function ColoringGallery() {
         <p className="text-muted-foreground">
           No colorings saved yet. Color a picture in the Coloring game, then tap Save!
         </p>
-        <Button asChild size="kid">
+        <Button asChild size="md">
           <StaticLink href="/games/coloring">Go to Coloring</StaticLink>
         </Button>
       </div>

@@ -54,11 +54,11 @@ export function MathLabGame() {
       </div>
 
       <div className="flex gap-3">
-        <Button type="button" variant="outline" size="kid" className="flex-1" onClick={replay}>
+        <Button type="button" variant="outline" size="md" className="flex-1" onClick={replay}>
           <RotateCcw className="size-5" aria-hidden="true" />
           Replay
         </Button>
-        <Button type="button" size="kid" className="flex-1 bg-success text-white hover:brightness-110" onClick={newExample}>
+        <Button type="button" size="md" className="flex-1 bg-success text-white hover:brightness-110" onClick={newExample}>
           <Shuffle className="size-5" aria-hidden="true" />
           New Example
         </Button>

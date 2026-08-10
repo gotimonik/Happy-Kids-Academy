@@ -57,7 +57,7 @@ export function ShareProgressButton(data: ProgressShareData) {
             : "Share my progress";
 
   return (
-    <Button type="button" size="kid" className="w-full" onClick={handleShare} disabled={status === "working"}>
+    <Button type="button" size="md" className="w-full" onClick={handleShare} disabled={status === "working"}>
       {status === "working" ? (
         <Loader2 className="size-5 animate-spin" aria-hidden="true" />
       ) : status === "shared" || status === "copied" ? (
