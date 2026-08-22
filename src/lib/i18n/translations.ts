@@ -34,7 +34,7 @@ const en = {
   "settings.tapToReset": "Tap to reset",
   "settings.resetConfirmTitle": "Reset all progress?",
   "settings.resetConfirmDescription":
-    "This clears stars, coins, badges, and lesson history. Language and sound settings are kept. This cannot be undone.",
+    "This clears stars, coins, badges, lesson history, and writing practice progress. Language and sound settings are kept. This cannot be undone.",
   "settings.resetConfirmButton": "Reset progress",
   "settings.offlineNote": "This app works fully offline once loaded.",
 
@@ -69,6 +69,17 @@ const en = {
   "quiz.wellDone": "Well done!",
   "quiz.scoreLine": "You scored {score} out of {total}",
   "quiz.coinsEarned": "+{count} coins",
+
+  "practice.progressOf": "Letter {current} of {total}",
+  "practice.tracedOf": "{done}/{total} traced",
+  "practice.bestScorePercent": "Best {score}%",
+  "practice.resultFlash": "{score}% traced!",
+  "practice.coinsEarned": "+{count} coins",
+  "practice.clearProgress": "Clear Progress",
+  "practice.clearConfirmTitle": "Clear writing practice progress?",
+  "practice.clearConfirmDescription":
+    "This clears traced letters and scores for {category}. This cannot be undone.",
+  "practice.clearConfirmButton": "Clear progress",
 
   "footer.taglineBefore": "Made with",
   "footer.taglineAfter": "for curious minds",
@@ -109,7 +120,7 @@ const gu: Record<TranslationKey, string> = {
   "settings.tapToReset": "રીસેટ કરવા માટે ટેપ કરો",
   "settings.resetConfirmTitle": "શું બધી પ્રગતિ રીસેટ કરવી છે?",
   "settings.resetConfirmDescription":
-    "આ સ્ટાર્સ, કોઈન્સ, બેજ અને પાઠનો ઇતિહાસ સાફ કરે છે. ભાષા અને સાઉન્ડ સેટિંગ્સ રહેશે. આ પરત કરી શકાશે નહીં.",
+    "આ સ્ટાર્સ, કોઈન્સ, બેજ, પાઠનો ઇતિહાસ અને લેખન અભ્યાસની પ્રગતિ સાફ કરે છે. ભાષા અને સાઉન્ડ સેટિંગ્સ રહેશે. આ પરત કરી શકાશે નહીં.",
   "settings.resetConfirmButton": "પ્રગતિ રીસેટ કરો",
   "settings.offlineNote": "આ એપ લોડ થયા પછી સંપૂર્ણપણે ઓફલાઇન કામ કરે છે.",
 
@@ -144,6 +155,17 @@ const gu: Record<TranslationKey, string> = {
   "quiz.wellDone": "સરસ કામ!",
   "quiz.scoreLine": "તમે {total} માંથી {score} મેળવ્યા",
   "quiz.coinsEarned": "+{count} કોઈન્સ",
+
+  "practice.progressOf": "અક્ષર {current} / {total}",
+  "practice.tracedOf": "{done}/{total} અભ્યાસ કર્યો",
+  "practice.bestScorePercent": "શ્રેષ્ઠ {score}%",
+  "practice.resultFlash": "{score}% ટ્રેસ થયું!",
+  "practice.coinsEarned": "+{count} કોઈન્સ",
+  "practice.clearProgress": "પ્રગતિ સાફ કરો",
+  "practice.clearConfirmTitle": "શું લેખન અભ્યાસની પ્રગતિ સાફ કરવી છે?",
+  "practice.clearConfirmDescription":
+    "આ {category} માટે ટ્રેસ કરેલા અક્ષરો અને સ્કોર સાફ કરે છે. આ પરત કરી શકાશે નહીં.",
+  "practice.clearConfirmButton": "પ્રગતિ સાફ કરો",
 
   "footer.taglineBefore": "બનાવ્યું",
   "footer.taglineAfter": "ઉત્સુક મનો માટે",
@@ -182,7 +204,7 @@ const hi: Record<TranslationKey, string> = {
   "settings.tapToReset": "रीसेट करने के लिए टैप करें",
   "settings.resetConfirmTitle": "क्या सारी प्रगति रीसेट करें?",
   "settings.resetConfirmDescription":
-    "यह स्टार्स, कॉइन्स, बैज और पाठ इतिहास को मिटा देता है। भाषा और साउंड सेटिंग्स बनी रहेंगी। इसे पूर्ववत नहीं किया जा सकता।",
+    "यह स्टार्स, कॉइन्स, बैज, पाठ इतिहास और लेखन अभ्यास की प्रगति को मिटा देता है। भाषा और साउंड सेटिंग्स बनी रहेंगी। इसे पूर्ववत नहीं किया जा सकता।",
   "settings.resetConfirmButton": "प्रगति रीसेट करें",
   "settings.offlineNote": "यह ऐप लोड होने के बाद पूरी तरह ऑफ़लाइन काम करता है।",
 
@@ -217,6 +239,17 @@ const hi: Record<TranslationKey, string> = {
   "quiz.wellDone": "बहुत बढ़िया!",
   "quiz.scoreLine": "आपने {total} में से {score} अंक पाए",
   "quiz.coinsEarned": "+{count} कॉइन्स",
+
+  "practice.progressOf": "अक्षर {current} / {total}",
+  "practice.tracedOf": "{done}/{total} अभ्यास किया",
+  "practice.bestScorePercent": "सर्वश्रेष्ठ {score}%",
+  "practice.resultFlash": "{score}% ट्रेस हुआ!",
+  "practice.coinsEarned": "+{count} कॉइन्स",
+  "practice.clearProgress": "प्रगति साफ़ करें",
+  "practice.clearConfirmTitle": "क्या लेखन अभ्यास की प्रगति साफ़ करें?",
+  "practice.clearConfirmDescription":
+    "यह {category} के लिए ट्रेस किए गए अक्षर और स्कोर साफ़ कर देता है। इसे पूर्ववत नहीं किया जा सकता।",
+  "practice.clearConfirmButton": "प्रगति साफ़ करें",
 
   "footer.taglineBefore": "बनाया गया",
   "footer.taglineAfter": "जिज्ञासु मनों के लिए",

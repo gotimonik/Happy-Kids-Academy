@@ -21,6 +21,7 @@ import { tileGradient } from "@/lib/ui/tile-gradient";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { useProgressStore } from "@/store/progress-store";
 import { useSettingsStore } from "@/store/settings-store";
+import { useWritingPracticeStore } from "@/store/writing-practice-store";
 import { LANGUAGE_LABELS } from "@/types/settings";
 
 const SETTINGS_COLOR = "#636E72";
@@ -88,6 +89,7 @@ export function SettingsPanel() {
   const toggleVoice = useSettingsStore((state) => state.toggleVoice);
   const toggleMusic = useSettingsStore((state) => state.toggleMusic);
   const resetProgress = useProgressStore((state) => state.resetProgress);
+  const resetWritingPractice = useWritingPracticeStore((state) => state.resetAll);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const hydrated = useStoreHydrated(useSettingsStore);
   const t = useTranslation();
@@ -172,6 +174,7 @@ export function SettingsPanel() {
               variant="destructive"
               onClick={() => {
                 resetProgress();
+                resetWritingPractice();
                 trackEvent("reset_progress");
                 setConfirmOpen(false);
               }}

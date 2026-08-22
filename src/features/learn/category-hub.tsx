@@ -5,11 +5,14 @@ import { BookOpen, PenLine, Star, Target } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { StaticLink as Link } from "@/components/shared/static-link";
 import { SegmentedToggle } from "@/components/shared/segmented-toggle";
+import { ClearWritingProgressButton } from "@/features/writing-practice/clear-writing-progress-button";
 import { useDisplayCategory } from "@/lib/categories/use-display-category";
 import { useTranslation } from "@/lib/i18n/use-translation";
+import { useStoreHydrated } from "@/lib/use-store-hydrated";
 import { tileGradient } from "@/lib/ui/tile-gradient";
 import { useProgressStore } from "@/store/progress-store";
 import { useSettingsStore } from "@/store/settings-store";
+import { selectCategoryTracedCount, useWritingPracticeStore } from "@/store/writing-practice-store";
 import type { LearningCategory } from "@/types/category";
 import type { LearningItem } from "@/types/item";
 
@@ -81,7 +84,14 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
   const setAlphabetCase = useSettingsStore((state) => state.setAlphabetCase);
   const setNumberScript = useSettingsStore((state) => state.setNumberScript);
   const displayCategory = useDisplayCategory(category);
+  const writingHydrated = useStoreHydrated(useWritingPracticeStore);
+  const tracedCount = useWritingPracticeStore((state) =>
+    category.trace ? selectCategoryTracedCount(state, category.slug) : 0,
+  );
   const t = useTranslation();
+
+  const traceableCount = category.items.filter((item) => Boolean(item.symbol)).length;
+  const hasWritingProgress = category.trace && writingHydrated && tracedCount > 0;
 
   const tiles: ActionTile[] = [
     {
@@ -104,7 +114,12 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
     tiles.push({
       href: `/learn/${category.slug}/practice`,
       title: t("learn.tile.practiceTitle"),
-      subtitle: t("learn.tile.practiceSubtitle"),
+      // Once there's saved trace progress, tease it right on the tile
+      // instead of the generic subtitle — it's the first place a returning
+      // child (or a parent checking in) would look for "how far did I get".
+      subtitle: hasWritingProgress
+        ? t("practice.tracedOf", { done: tracedCount, total: traceableCount })
+        : t("learn.tile.practiceSubtitle"),
       icon: PenLine,
       color: PRACTICE_COLOR,
       wide: true,
@@ -213,6 +228,12 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
           <ActionCard key={tile.href} tile={tile} index={index} />
         ))}
       </div>
+
+      {hasWritingProgress && (
+        <div className="flex justify-center">
+          <ClearWritingProgressButton categorySlug={category.slug} categoryTitle={category.title} />
+        </div>
+      )}
     </div>
   );
 }

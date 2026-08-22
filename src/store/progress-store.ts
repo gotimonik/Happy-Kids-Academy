@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { starsForRatio } from "@/lib/scoring";
 import type { CategorySlug } from "@/types/category";
 import { INITIAL_PROGRESS, type ProgressState } from "@/types/progress";
 
@@ -20,13 +21,6 @@ interface ProgressActions {
 
 export type ProgressStore = ProgressState & ProgressActions;
 
-function starsForScore(score: number, totalRounds: number): number {
-  const ratio = totalRounds === 0 ? 0 : score / totalRounds;
-  if (ratio >= 0.9) return 3;
-  if (ratio >= 0.6) return 2;
-  return 1;
-}
-
 export const useProgressStore = create<ProgressStore>()(
   persist(
     (set) => ({
@@ -35,7 +29,8 @@ export const useProgressStore = create<ProgressStore>()(
         set((state) => {
           const previousBest = state.bestScoreByCategory[category] ?? 0;
           const previousStars = state.starsByCategory[category] ?? 0;
-          const earnedStars = starsForScore(score, totalRounds);
+          const ratio = totalRounds === 0 ? 0 : score / totalRounds;
+          const earnedStars = starsForRatio(ratio);
           return {
             bestScoreByCategory: {
               ...state.bestScoreByCategory,

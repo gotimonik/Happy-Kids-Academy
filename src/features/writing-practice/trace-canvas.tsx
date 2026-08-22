@@ -13,6 +13,12 @@ export interface TraceCanvasHandle {
   loadImage: (dataUrl: string) => Promise<void>;
   /** True when nothing has been drawn yet (see `useTracePad`'s `isBlank` for the `guideText=""` caveat). */
   isBlank: () => boolean;
+  /** 0–100 trace-accuracy score against the guide glyph, or `null` if there's no guide or nothing's been drawn yet. See `useTracePad`'s `computeGuideScore`. */
+  score: () => number | null;
+  /** Raw-pixel snapshot of exactly what's on the pad right now (guide + ink, alpha-exact) — or `null` if the canvas isn't ready. Pairs with `restoreSnapshot` to bring an in-progress drawing back after the pad's been fully repainted (e.g. remounted for a different guide letter). Not for saving/sharing — see `exportImage` for that. */
+  exportSnapshot: () => ImageData | null;
+  /** Drops a previously-`exportSnapshot`'d picture back onto the pad exactly as captured. No-ops if the pad's pixel size has changed since the snapshot was taken. */
+  restoreSnapshot: (snapshot: ImageData) => void;
 }
 
 export const TraceCanvas = forwardRef<
@@ -36,6 +42,9 @@ export const TraceCanvas = forwardRef<
     exportPng,
     loadImage,
     isBlank,
+    computeGuideScore,
+    exportSnapshot,
+    restoreSnapshot,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
@@ -43,8 +52,17 @@ export const TraceCanvas = forwardRef<
 
   useImperativeHandle(
     ref,
-    () => ({ clear, undo, exportImage: exportPng, loadImage, isBlank }),
-    [clear, undo, exportPng, loadImage, isBlank],
+    () => ({
+      clear,
+      undo,
+      exportImage: exportPng,
+      loadImage,
+      isBlank,
+      score: computeGuideScore,
+      exportSnapshot,
+      restoreSnapshot,
+    }),
+    [clear, undo, exportPng, loadImage, isBlank, computeGuideScore, exportSnapshot, restoreSnapshot],
   );
 
   return (
