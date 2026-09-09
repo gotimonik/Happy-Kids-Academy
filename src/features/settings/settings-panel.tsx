@@ -21,6 +21,9 @@ import { tileGradient } from "@/lib/ui/tile-gradient";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { useProgressStore } from "@/store/progress-store";
 import { useSettingsStore } from "@/store/settings-store";
+import { useDailyChallengeStore } from "@/store/daily-challenge-store";
+import { useDailyPickStore } from "@/store/daily-pick-store";
+import { useStreakStore } from "@/store/streak-store";
 import { useWritingPracticeStore } from "@/store/writing-practice-store";
 import { LANGUAGE_LABELS } from "@/types/settings";
 
@@ -90,6 +93,9 @@ export function SettingsPanel() {
   const toggleMusic = useSettingsStore((state) => state.toggleMusic);
   const resetProgress = useProgressStore((state) => state.resetProgress);
   const resetWritingPractice = useWritingPracticeStore((state) => state.resetAll);
+  const resetStreak = useStreakStore((state) => state.resetAll);
+  const resetDailyChallenge = useDailyChallengeStore((state) => state.resetAll);
+  const resetDailyPick = useDailyPickStore((state) => state.resetAll);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const hydrated = useStoreHydrated(useSettingsStore);
   const t = useTranslation();
@@ -175,6 +181,9 @@ export function SettingsPanel() {
               onClick={() => {
                 resetProgress();
                 resetWritingPractice();
+                resetStreak();
+                resetDailyChallenge();
+                resetDailyPick();
                 trackEvent("reset_progress");
                 setConfirmOpen(false);
               }}

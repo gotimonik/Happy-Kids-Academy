@@ -10,10 +10,13 @@ import type { QuizResult } from "@/types/quiz";
 
 export function CelebrateScreen({
   result,
+  bonusLine,
   onPlayAgain,
   onBackHome,
 }: {
   result: QuizResult;
+  /** Extra pre-formatted line shown below the coin count — e.g. a Daily Challenge's bonus-coin callout. Omitted entirely when not passed, so every other quiz screen is unaffected. */
+  bonusLine?: string;
   onPlayAgain: () => void;
   onBackHome: () => void;
 }) {
@@ -45,6 +48,7 @@ export function CelebrateScreen({
         ))}
       </div>
       <p className="text-sm font-bold text-[#E17055]">{t("quiz.coinsEarned", { count: result.coinsEarned })}</p>
+      {bonusLine && <p className="text-sm font-bold text-[#6F4EAA]">{bonusLine}</p>}
 
       {/* "kid" size (64px tall, roomier gap) matches every other primary
           button in the app — this pair was still on the smaller "md" size

@@ -18,6 +18,8 @@ export interface QuizSessionProps {
   readonly totalRounds?: number;
   readonly backHref: string;
   readonly onQuizFinish?: (result: QuizResult) => void;
+  /** Forwarded to `CelebrateScreen` — see its own doc comment. */
+  readonly bonusLine?: string;
 }
 
 export function QuizSession({
@@ -27,6 +29,7 @@ export function QuizSession({
   totalRounds = 10,
   backHref,
   onQuizFinish,
+  bonusLine,
 }: QuizSessionProps) {
   const router = useRouter();
   const [result, setResult] = useState<QuizResult | null>(null);
@@ -61,6 +64,7 @@ export function QuizSession({
     return (
       <CelebrateScreen
         result={result}
+        bonusLine={bonusLine}
         onPlayAgain={() => {
           setResult(null);
           restart();

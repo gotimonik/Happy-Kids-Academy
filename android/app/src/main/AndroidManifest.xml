@@ -22,6 +22,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!--
+                Android App Link: lets a tapped happykidsacademy.playfantacy.com
+                link (e.g. the "Share my progress" link from the Rewards page)
+                open straight into this already-installed app instead of a
+                browser tab, once the domain is verified.
+
+                `android:autoVerify="true"` makes Android check
+                https://happykidsacademy.playfantacy.com/.well-known/assetlinks.json
+                (see public/.well-known/assetlinks.json) against this app's
+                signing certificate at install time. Until that file lists the
+                real certificate fingerprint(s), Android treats this as an
+                ordinary (non-verified) deep link — still handled if the user
+                explicitly picks this app from the chooser, but not opened
+                automatically. See android/APP_LINKS_SETUP.md for how to get
+                the real fingerprint and finish this.
+
+                No `android:pathPrefix`/`android:path*` restriction: this
+                covers the whole site, so any page shared from the app (not
+                just /progress) opens the app the same way.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="happykidsacademy.playfantacy.com" />
+            </intent-filter>
+
         </activity>
 
         <provider

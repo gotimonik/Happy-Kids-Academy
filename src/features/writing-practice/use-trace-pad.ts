@@ -58,6 +58,23 @@ function withAlpha(color: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// Gujarati (U+0A80–U+0AFF) glyphs live only in the separate "Baloo Bhai 2"
+// font (`--font-baloo-gujarati`); everything else — Latin and Devanagari
+// (Hindi) — is covered by the main `--font-baloo` (Baloo 2) font. Canvas
+// `fillText` picks exactly one font for the whole string and, unlike normal
+// DOM text, doesn't reliably fall back per-character to a font that actually
+// has the glyph — so asking it to draw a Gujarati letter in a font with no
+// Gujarati glyphs at all is what produced a wrong/garbled guide character
+// instead of the intended letter on some real devices. Reading the right CSS
+// variable up front means the canvas always draws from a font that genuinely
+// contains the glyphs it's being asked for.
+const GUJARATI_RANGE = /[\u0A80-\u0AFF]/;
+
+/** Picks the `--font-baloo*` CSS variable whose loaded font actually has glyphs for `text`'s script. */
+function guideFontVariable(text: string): string {
+  return GUJARATI_RANGE.test(text) ? "--font-baloo-gujarati" : "--font-baloo";
+}
+
 /**
  * Measures `text` at `fontSize` and, if its actual ink extents (not the
  * font's advance-width em-box) would overflow the pad, scales the font down
@@ -83,12 +100,24 @@ function fitGuideFont(
 ): { fontSize: number; metrics: TextMetrics } {
   ctx.font = `bold ${baseFontSize}px ${guideFont}`;
   let metrics = ctx.measureText(text);
-  const actualWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
-  const actualHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+  let actualWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight;
+  let actualHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
 
-  // Some browsers/fonts can report all-zero actualBoundingBox* metrics (e.g.
-  // a font that hasn't finished loading yet). Fall back to the base size
-  // rather than dividing by zero or collapsing the glyph to nothing.
+  // Some browsers/webviews (older mobile Safari and Android WebView builds
+  // especially) don't support the ink-bounds TextMetrics properties at all —
+  // `actualBoundingBox*` comes back `undefined` rather than a number — and a
+  // font that hasn't finished loading yet can report all-zero metrics too.
+  // Previously both cases fell straight through to the glyph's full,
+  // unclamped `baseFontSize`, which is exactly what let a wide/tall
+  // Gujarati/Hindi guide character spill past the pad's edges (and overlap
+  // the surrounding page) on those real devices. Fall back to the
+  // universally-supported advance-width metric plus an approximate em-height
+  // instead, so every device still gets *some* fit clamp rather than none.
+  if (!(actualWidth > 0) || !(actualHeight > 0)) {
+    actualWidth = metrics.width;
+    actualHeight = baseFontSize * 1.2;
+  }
+
   if (!(actualWidth > 0) || !(actualHeight > 0)) {
     return { fontSize: baseFontSize, metrics };
   }
@@ -147,6 +176,10 @@ export function useTracePad({
   // pixels are the letter" to compare the live canvas against. `null` for
   // the free-draw canvas (`guideText=""`), which has nothing to score.
   const guideMaskRef = useRef<Uint8ClampedArray | null>(null);
+  // Container size (CSS px) as of the last real paint — lets the
+  // ResizeObserver below tell a genuine layout change from a redundant
+  // callback reporting the size we already painted at.
+  const lastPaintedSizeRef = useRef<{ width: number; height: number } | null>(null);
   const onCanUndoChangeRef = useRef(onCanUndoChange);
   // Only used to trigger a redraw when the user toggles light/dark mode —
   // the actual color comes from the container's computed style below.
@@ -195,6 +228,7 @@ export function useTracePad({
 
     const dpr = window.devicePixelRatio || 1;
     const { width, height } = container.getBoundingClientRect();
+    lastPaintedSizeRef.current = { width, height };
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = `${width}px`;
@@ -211,9 +245,12 @@ export function useTracePad({
       // it "var(--font-baloo)" literally fails silently and canvas falls back
       // to its 10px default, rendering the guide glyph almost invisibly small.
       // Read the variable's raw value (next/font's generated font-family list)
-      // straight off the body instead, where it's applied via className.
+      // straight off the body instead, where it's applied via className —
+      // and pick *which* variable based on the guide text's script, so the
+      // font actually has glyphs for what it's about to draw.
       const guideFont =
-        getComputedStyle(document.body).getPropertyValue("--font-baloo").trim() || "sans-serif";
+        getComputedStyle(document.body).getPropertyValue(guideFontVariable(guideText)).trim() ||
+        "sans-serif";
 
       // A fixed low-opacity black guide disappears entirely against a dark
       // card background. Derive the guide color from the current (inherited)
@@ -238,10 +275,32 @@ export function useTracePad({
       const actualHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
       let drawX = width / 2;
       let drawY = height / 2;
-      if (actualWidth > 0 && actualHeight > 0) {
+      // Trust the ink-bounds offset only when it's a *plausible* one. Some
+      // real devices/webviews (seen on Realme, Xiaomi and iPad) have
+      // reported this glyph spilling out of the pad and overlapping the
+      // text above/below it for plain ASCII digits too — a script the
+      // loaded font has always covered fine — which points at bad
+      // `actualBoundingBox*` values here, not a missing glyph: a handful of
+      // Chromium/WebKit builds return wildly large (or negative) numbers
+      // from these properties instead of cleanly `0`/`undefined`, and the
+      // previous `> 0` check alone doesn't catch a bogus-but-positive value.
+      // A believable offset can't exceed roughly the pad's own size, so
+      // anything past that is treated as bad data and the plain (unshifted)
+      // center is used instead — never perfect for an off-center glyph, but
+      // always safely inside the pad, which is what actually matters here.
+      const offsetsLookPlausible =
+        actualWidth > 0 && actualHeight > 0 && actualWidth <= width * 1.5 && actualHeight <= height * 1.5;
+      if (offsetsLookPlausible) {
         drawX += (metrics.actualBoundingBoxLeft - metrics.actualBoundingBoxRight) / 2;
         drawY += (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
       }
+      // Final safety net regardless of how drawX/drawY were derived above:
+      // clamp the fillText anchor itself to stay within the pad, so even an
+      // offset that passed the plausibility check above (or a font whose
+      // own metrics are simply unusual on some device) can't push the guide
+      // glyph's origin outside the box it's meant to be centered in.
+      drawX = Math.min(Math.max(drawX, width * 0.1), width * 0.9);
+      drawY = Math.min(Math.max(drawY, height * 0.1), height * 0.9);
 
       ctx.fillText(guideText, drawX, drawY);
 
@@ -329,16 +388,23 @@ export function useTracePad({
     // is what actually keeps the guide letter sized and centered correctly
     // "for all screens and devices" rather than only on an explicit resize.
     // `ResizeObserver` always delivers one "initial" callback right after
-    // `.observe()` starts, even though nothing has actually resized yet —
-    // without skipping it, every mount repaints the guide *twice* (once
-    // synchronously above, once again a moment later via this observer),
-    // and that second, asynchronous repaint can land after — and silently
-    // wipe — anything else that ran right after mount (e.g. Writing
-    // Practice restoring an in-progress drawing once the pad is ready).
-    let isInitialObservation = true;
+    // `.observe()` starts, even though nothing has resized *from here* —
+    // but on some real devices the container's size right after this
+    // synchronous mount paint genuinely isn't final yet (a web font
+    // finishing load below/above the pad, a safe-area/viewport adjustment,
+    // sibling content reflowing a beat later), and that real size lands on
+    // exactly this "initial" callback. Unconditionally skipping it left the
+    // guide painted at the *wrong* size for the container's actual final
+    // box on those devices — which is how a guide letter ends up spilling
+    // past the white card into the text above/below it. Compare against the
+    // size that was actually last painted instead of blindly skipping the
+    // first callback, so a genuine change (initial or not) still repaints,
+    // while a callback that reports the exact size we already painted is a
+    // true no-op and doesn't cause a redundant/wiping repaint.
     const observer = new ResizeObserver(() => {
-      if (isInitialObservation) {
-        isInitialObservation = false;
+      const painted = lastPaintedSizeRef.current;
+      const { width, height } = container.getBoundingClientRect();
+      if (painted && Math.abs(painted.width - width) < 0.5 && Math.abs(painted.height - height) < 0.5) {
         return;
       }
       drawGuide();

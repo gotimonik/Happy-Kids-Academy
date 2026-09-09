@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { selectBadges, selectLevel, selectTotalStars, useProgressStore } from "@/store/progress-store";
 import { RewardStatCard } from "./reward-stat-card";
 import { ShareProgressButton } from "./share-progress-button";
+import { StreakCard } from "./streak-card";
 
 const CERTIFICATE_THRESHOLD = 15;
 const LEVEL_STARS = 8;
@@ -24,6 +25,7 @@ function RewardsDashboardSkeleton() {
         <Skeleton className="mx-auto mt-2 h-4 w-40 rounded-full bg-white/25" />
         <Skeleton className="mx-auto mt-4 h-3 w-full max-w-xs rounded-full bg-white/25" />
       </div>
+      <Skeleton className="h-40 w-full rounded-3xl" />
       <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} className="h-28 w-full rounded-2xl" />
@@ -77,6 +79,8 @@ export function RewardsDashboard() {
           />
         </div>
       </div>
+
+      <StreakCard />
 
       <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-4">
         <RewardStatCard icon={<Star className="fill-current" />} label="Stars" value={stars} accentColor="#FFD166" />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/shared/json-ld";
 import { CategoryGrid } from "@/features/home/category-grid";
 import { HomeHero } from "@/features/home/home-hero";
+import { StreakWelcomeModal } from "@/features/home/streak-welcome-modal";
 import { websiteJsonLd } from "@/lib/seo/json-ld";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-6">
       <JsonLd data={websiteJsonLd()} />
+      <StreakWelcomeModal />
       <HomeHero />
       <CategoryGrid />
     </div>

@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.happykids.academy",
+      "sha256_cert_fingerprints":
+        ["E7:57:4D:38:00:D6:20:50:2F:75:FB:1B:F2:9E:63:53:06:98:BF:1B:0D:BB:B0:3B:8F:62:BC:DC:70:E8:E3:6D"]
+    }
+  }
+]

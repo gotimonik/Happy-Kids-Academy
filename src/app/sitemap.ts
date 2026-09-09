@@ -9,6 +9,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://happykidsacademy.pl
 const STATIC_ROUTES = [
   "",
   "/quiz",
+  "/daily-challenge",
   "/games",
   "/rewards",
   "/progress",

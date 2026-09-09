@@ -1,11 +1,27 @@
 "use client";
 
-import { BarChart3, Gamepad2, Settings, Sparkles, Target, Trophy } from "lucide-react";
+import { BarChart3, Gamepad2, Settings, Sparkles, Target, Trophy, Zap } from "lucide-react";
 import { categories } from "@/data/categories";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import type { TranslationKey } from "@/lib/i18n/translations";
 import { CategoryTile } from "./category-tile";
 import { SpecialTile } from "./special-tile";
+
+// Daily Challenge is deliberately the very first tile in the grid — it's the
+// tile kids should see and tap first when they open Explore & Play.
+const DAILY_CHALLENGE_TILE = {
+  href: "/daily-challenge",
+  titleKey: "home.tile.dailyChallengeTitle",
+  subtitleKey: "home.tile.dailyChallengeSubtitle",
+  icon: Zap,
+  color: "#E84393",
+} satisfies {
+  href: string;
+  titleKey: TranslationKey;
+  subtitleKey: TranslationKey;
+  icon: typeof Target;
+  color: string;
+};
 
 const SPECIAL_TILES = [
   { href: "/quiz", titleKey: "home.tile.quizTitle", subtitleKey: "home.tile.quizSubtitle", icon: Target, color: "#00B894" },
@@ -31,6 +47,14 @@ export function CategoryGrid() {
         {t("home.explorePlay")}
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <SpecialTile
+          key={DAILY_CHALLENGE_TILE.href}
+          title={t(DAILY_CHALLENGE_TILE.titleKey)}
+          subtitle={t(DAILY_CHALLENGE_TILE.subtitleKey)}
+          href={DAILY_CHALLENGE_TILE.href}
+          icon={DAILY_CHALLENGE_TILE.icon}
+          color={DAILY_CHALLENGE_TILE.color}
+        />
         {categories.map((category) => (
           <CategoryTile key={category.slug} category={category} />
         ))}

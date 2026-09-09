@@ -10,7 +10,15 @@ interface StaticLinkProps
   readonly children: ReactNode;
 }
 
-function toNativeStaticHref(href: string): string {
+/**
+ * Converts an extensionless app route (e.g. `/learn/animals`, or a relative
+ * `pathname+search+hash` reconstructed from an incoming URL) into the literal
+ * static-export path the native WebView actually has on disk. Exported so
+ * `DeepLinkHandler` can reuse the exact same rule for an incoming Android App
+ * Link — the two need to agree byte-for-byte or a deep link would land on a
+ * path this navigation doesn't.
+ */
+export function toNativeStaticHref(href: string): string {
   if (
     href.startsWith("#") ||
     href.startsWith("mailto:") ||

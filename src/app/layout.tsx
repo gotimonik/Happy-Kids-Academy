@@ -1,20 +1,45 @@
 import type { Metadata, Viewport } from "next";
-import { Baloo_2, Nunito } from "next/font/google";
+import { Baloo_2, Baloo_Bhai_2, Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AnimatedBackground } from "@/components/shared/animated-background";
 import { AppShell } from "@/components/shared/app-shell";
 import { BackButtonHandler } from "@/components/shared/back-button-handler";
+import { DeepLinkHandler } from "@/components/shared/deep-link-handler";
 import { SplashScreenHandler } from "@/components/shared/splash-screen-handler";
 import { GoogleAnalytics } from "@/components/shared/google-analytics";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import { ScrollToTop } from "@/components/shared/scroll-to-top";
 import { SessionTimeTracker } from "@/components/shared/session-time-tracker";
+import { StreakMilestoneCelebration } from "@/components/shared/streak-milestone-celebration";
+import { StreakTracker } from "@/components/shared/streak-tracker";
 import "./globals.css";
 
 const baloo = Baloo_2({
-  subsets: ["latin"],
+  // "latin" alone left this font with zero Devanagari glyphs, so any Hindi
+  // guide letter drawn with it (the Writing Practice trace pad, which reads
+  // this font straight off the DOM via getComputedStyle — see
+  // use-trace-pad.ts) had no real glyph to render at all. Browsers differ
+  // wildly in what they substitute for a missing glyph on <canvas>
+  // (unlike normal DOM text, canvas fillText doesn't reliably do
+  // per-character fallback+shaping), which is why the guide letter came out
+  // as visibly wrong/garbled glyphs on some real devices (seen especially on
+  // Realme/Xiaomi Android and iPad) instead of a consistent "just a bit off"
+  // look everywhere. Baloo 2 actually ships Devanagari glyphs upstream —
+  // this was only ever a missing subset, not a missing font.
+  subsets: ["latin", "devanagari"],
   variable: "--font-baloo",
+  display: "swap",
+});
+
+// Gujarati guide letters have the same problem, but Baloo 2 itself has no
+// Gujarati glyphs at all (Google Fonts ships that as the sibling family
+// "Baloo Bhai 2") — so Hindi and Gujarati each need their own loaded font
+// here, and the trace pad picks between them by the guide text's script
+// (see `guideFontVariable` in use-trace-pad.ts).
+const balooGujarati = Baloo_Bhai_2({
+  subsets: ["latin", "gujarati"],
+  variable: "--font-baloo-gujarati",
   display: "swap",
 });
 
@@ -100,7 +125,10 @@ export default function RootLayout({
         onto <body> before React hydrates. That's a harmless client-only
         difference, not an app bug — see https://react.dev/link/hydration-mismatch.
       */}
-      <body className={`${baloo.variable} ${nunito.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body
+        className={`${baloo.variable} ${balooGujarati.variable} ${nunito.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -110,6 +138,7 @@ export default function RootLayout({
           <AnimatedBackground />
           <SplashScreenHandler />
           <BackButtonHandler />
+          <DeepLinkHandler />
           <ScrollToTop />
           <a
             href="#main-content"
@@ -118,6 +147,8 @@ export default function RootLayout({
             Skip to content
           </a>
           <SessionTimeTracker />
+          <StreakTracker />
+          <StreakMilestoneCelebration />
           <PwaRegister />
           <Suspense fallback={null}>
             <GoogleAnalytics />

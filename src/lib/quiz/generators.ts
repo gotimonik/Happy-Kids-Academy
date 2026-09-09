@@ -3,6 +3,7 @@ import type { LearningItem } from "@/types/item";
 import type { QuizQuestion } from "@/types/quiz";
 import { alphabetCategory } from "@/data/categories/alphabet";
 import { createNoRepeatGenerator } from "./no-repeat";
+import { seededShuffle } from "./seeded-random";
 import { buildOptions, pickDistractors } from "./utils";
 
 /** The glyph actually shown on screen for an item's picture-identification prompt. */
@@ -142,9 +143,20 @@ const TIMES_TABLES_PAIRS: ReadonlyArray<readonly [number, number]> = Array.from(
   (_, aIndex) => aIndex + 2,
 ).flatMap((a) => Array.from({ length: 10 }, (_, bIndex) => [a, bIndex + 1] as const));
 
-/** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
-export function createTimesTablesQuestionGenerator(): () => QuizQuestion {
-  return createNoRepeatGenerator(TIMES_TABLES_PAIRS, buildTimesTablesQuestion);
+/**
+ * One generator per quiz session — see `createCategoryQuestionGenerator` for
+ * why this has to be created once and reused across rounds. Pass
+ * `tableNumber` to restrict every question to just that number's table
+ * (e.g. only "7 × ?" facts, one per multiplier 1–10) instead of drawing
+ * from every table 2–10 — what `TimesTablesHub`'s "Practice this table"
+ * button uses after a child picks a specific number to study.
+ */
+export function createTimesTablesQuestionGenerator(tableNumber?: number): () => QuizQuestion {
+  const domain: ReadonlyArray<readonly [number, number]> =
+    tableNumber === undefined
+      ? TIMES_TABLES_PAIRS
+      : Array.from({ length: 10 }, (_, bIndex) => [tableNumber, bIndex + 1] as const);
+  return createNoRepeatGenerator(domain, buildTimesTablesQuestion);
 }
 
 /** "Which word starts with X?" for one specific letter index — always drawn from the Alphabet category. */
@@ -192,4 +204,37 @@ const PATTERNS_PAIRS: ReadonlyArray<readonly [number, number]> = Array.from(
 /** One generator per quiz session — see `createCategoryQuestionGenerator` for why this has to be created once and reused across rounds. */
 export function createPatternsQuestionGenerator(): () => QuizQuestion {
   return createNoRepeatGenerator(PATTERNS_PAIRS, buildPatternsQuestion);
+}
+
+/**
+ * Builds today's fixed set of `count` Daily Challenge questions — drawn
+ * from every item in every category, deterministically shuffled from
+ * `seed` (the day's local date key) so every player who opens the
+ * challenge on the same calendar day gets the exact same questions, with
+ * no server involved. Unlike the other generators in this file, this one
+ * commits to its full question list up front rather than drawing lazily,
+ * since the whole point is "the same few questions all day", not an
+ * ever-fresh stream — the returned function just replays that fixed list.
+ */
+export function createDailyChallengeGenerator(
+  categories: readonly LearningCategory[],
+  seed: string,
+  count: number,
+): () => QuizQuestion {
+  const pool = categories.flatMap((category) =>
+    category.items.map((item) => ({ category, item })),
+  );
+  if (pool.length === 0) {
+    throw new Error("No categories available for the daily challenge");
+  }
+
+  const picks = seededShuffle(pool, seed).slice(0, Math.min(count, pool.length));
+  const questions = picks.map(({ category, item }) => buildQuestionForItem(category, item));
+
+  let index = 0;
+  return () => {
+    const question = questions[index % questions.length] as QuizQuestion;
+    index += 1;
+    return question;
+  };
 }

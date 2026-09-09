@@ -53,7 +53,7 @@ function ActionCard({ tile, index }: { tile: ActionTile; index: number }) {
     >
       <Link
         href={tile.href}
-        className="group relative flex min-h-28 items-center gap-4 overflow-hidden rounded-3xl p-5 text-white shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:min-h-32"
+        className="group relative flex min-h-20 items-center gap-3 overflow-hidden rounded-3xl p-4 text-white shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:min-h-24"
         style={tileGradient(tile.color)}
       >
         <span
@@ -62,15 +62,15 @@ function ActionCard({ tile, index }: { tile: ActionTile; index: number }) {
         />
         <span
           aria-hidden="true"
-          className="absolute -right-6 -top-8 size-28 rounded-full bg-white/15 transition-transform group-hover:scale-110"
+          className="absolute -right-5 -top-6 size-20 rounded-full bg-white/15 transition-transform group-hover:scale-110"
         />
-        <span aria-hidden="true" className="absolute -left-8 -bottom-10 size-28 rounded-full bg-black/10 blur-md" />
-        <span className="relative flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-          <Icon className="size-7" aria-hidden="true" />
+        <span aria-hidden="true" className="absolute -left-6 -bottom-8 size-20 rounded-full bg-black/10 blur-md" />
+        <span className="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+          <Icon className="size-5" aria-hidden="true" />
         </span>
         <span className="relative">
-          <span className="block font-display text-lg font-bold drop-shadow-sm sm:text-xl">{tile.title}</span>
-          <span className="block text-sm text-white/85">{tile.subtitle}</span>
+          <span className="block font-display text-base font-bold drop-shadow-sm sm:text-lg">{tile.title}</span>
+          <span className="block text-xs text-white/85">{tile.subtitle}</span>
         </span>
       </Link>
     </motion.div>
@@ -137,18 +137,18 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-3xl p-6 text-white shadow-lg sm:p-8"
+        className="relative overflow-hidden rounded-3xl p-5 text-white shadow-lg sm:p-6"
         style={tileGradient(category.color)}
       >
         <span
           aria-hidden="true"
           className="absolute inset-x-0 top-0 h-1/2 rounded-t-3xl bg-gradient-to-b from-white/25 to-transparent"
         />
-        <span aria-hidden="true" className="absolute -right-10 -top-12 size-40 rounded-full bg-white/15" />
-        <span aria-hidden="true" className="absolute -left-12 -bottom-16 size-40 rounded-full bg-black/10 blur-md" />
+        <span aria-hidden="true" className="absolute -right-8 -top-10 size-32 rounded-full bg-white/15" />
+        <span aria-hidden="true" className="absolute -left-10 -bottom-12 size-32 rounded-full bg-black/10 blur-md" />
 
         <div className="relative flex items-start justify-between gap-3">
-          <span aria-hidden="true" className="animate-float text-5xl font-black drop-shadow-sm sm:text-6xl">
+          <span aria-hidden="true" className="animate-float text-4xl font-black drop-shadow-sm sm:text-5xl">
             {category.icon}
           </span>
           {stars > 0 && (
@@ -167,8 +167,8 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
           )}
         </div>
 
-        <h1 className="relative mt-3 font-display text-2xl font-bold sm:text-3xl">{category.title}</h1>
-        <p className="relative mt-1 text-white/85">{category.subtitle}</p>
+        <h1 className="relative mt-2 font-display text-xl font-bold sm:text-2xl">{category.title}</h1>
+        <p className="relative mt-1 text-sm text-white/85">{category.subtitle}</p>
 
         {category.slug === "alphabet" && (
           <div className="relative mt-4">
@@ -200,11 +200,11 @@ export function CategoryHub({ category }: { category: LearningCategory }) {
         )}
 
         {preview.length > 0 && (
-          <div className="relative mt-5 flex flex-wrap gap-2" aria-hidden="true">
+          <div className="relative mt-4 flex flex-wrap gap-2" aria-hidden="true">
             {preview.map((chip, index) => (
               <span
                 key={index}
-                className="animate-pop flex size-10 items-center justify-center rounded-full bg-white/20 text-lg backdrop-blur-sm sm:size-11"
+                className="animate-pop flex size-9 items-center justify-center rounded-full bg-white/20 text-base backdrop-blur-sm sm:size-10"
                 style={{ animationDelay: `${index * 40}ms`, animationFillMode: "backwards" }}
               >
                 {chip.kind === "swatch" ? (

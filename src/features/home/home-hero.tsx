@@ -2,8 +2,10 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { DailyChallengeBadge } from "@/components/shared/daily-challenge-badge";
 import { LevelBadge } from "@/components/shared/level-badge";
 import { Skeleton } from "@/components/shared/skeleton-card";
+import { StreakFlameBadge } from "@/components/shared/streak-flame-badge";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { heroGradient } from "@/lib/ui/tile-gradient";
 
@@ -25,7 +27,11 @@ function HomeHeroSkeleton() {
     >
       <Skeleton className="h-7 w-52 rounded-full bg-white/30 sm:h-8 sm:w-64" />
       <Skeleton className="mt-3 h-4 w-36 rounded-full bg-white/25" />
-      <Skeleton className="mt-4 h-8 w-24 rounded-full bg-white/30" />
+      <div className="mt-4 flex gap-2">
+        <Skeleton className="h-8 w-24 rounded-full bg-white/30" />
+        <Skeleton className="h-8 w-24 rounded-full bg-white/30" />
+        <Skeleton className="h-8 w-24 rounded-full bg-white/30" />
+      </div>
     </div>
   );
 }
@@ -64,8 +70,10 @@ export function HomeHero() {
 
       <h1 className="relative font-display text-2xl font-bold sm:text-3xl">Happy Kids Academy</h1>
       <p className="relative mt-1 text-sm text-white/85 sm:text-base">{t("home.tagline")}</p>
-      <div className="relative mt-4">
+      <div className="relative mt-4 flex flex-wrap gap-2">
         <LevelBadge />
+        <StreakFlameBadge />
+        <DailyChallengeBadge />
       </div>
     </motion.section>
   );
