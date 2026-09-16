@@ -22,10 +22,27 @@ export interface LearningItem {
   readonly label: string;
   /** Secondary detail line, e.g. "Pronunciation: A" or "Odd • ●●●". */
   readonly detail: string;
+  /**
+   * A short, kid-friendly fun fact about this specific item — e.g. "Lions
+   * live together in a family group called a pride." Shown alongside the
+   * item (Learn flash cards, Writing Practice) so kids pick up a little
+   * real-world knowledge about what they're looking at/tracing, not just
+   * its name. Optional: categories like Numbers and Math facts don't have
+   * a "thing" to describe, so they simply omit it.
+   */
+  readonly fact?: string;
   /** Text sent to the speech synthesizer when "Pronounce" is tapped. */
   readonly speech: string;
   /** Optional sound word for animals/birds, e.g. "Roar". Spoken slower/lower. */
   readonly sound?: string;
   /** Hex color for color-swatch items (Colors category only). */
   readonly visualColor?: string;
+  /**
+   * A longer (roughly one paragraph, 5-7 sentences) description of this
+   * item, shown in its own section below the flash card on the Learn
+   * lesson page — unlike `fact` (a single short "did you know" line), this
+   * is meant to give each item page substantive, unique reading content.
+   * Optional: categories/items without one yet simply render no section.
+   */
+  readonly longDescription?: string;
 }

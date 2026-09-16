@@ -3,6 +3,34 @@
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
+import { normalizePathname, toNativeStaticHref } from "./static-link";
+
+/**
+ * A category's Lesson/Practice/Quiz screen (`/learn/<slug>/lesson`, etc.)
+ * each step through their own items with plain in-memory React state —
+ * `LessonCarousel`, `PracticePageClient`, and `CategoryQuizClient` all move
+ * between letters/questions via `setIndex`, never a URL or history change.
+ * That's exactly why the hardware back button used to feel broken here: with
+ * only one real WebView history entry for the whole screen, `history.back()`
+ * jumps straight past it to whatever's *behind* it — except Android's
+ * predictive-back/bfcache restore can instead hand the WebView back a
+ * snapshot of this same document from partway through, which visually reads
+ * as "back" landed on an earlier letter instead of leaving the lesson.
+ * Either way, stepping through items should never be what the hardware back
+ * button does. So any of these three screens is special-cased to jump
+ * straight to that category's hub instead of trusting raw browser history —
+ * matching the same "Up" semantics as the on-screen Back button in the
+ * app header, regardless of how many items were stepped through inside.
+ */
+function categoryHubHref(pathname: string): string | null {
+  // The native WebView serves the static export's literal `.html` files
+  // (e.g. `/learn/birds/lesson.html`), so `window.location.pathname` here
+  // is that raw on-disk path, not the extensionless route — `normalizePathname`
+  // (the same rule `StaticLink` and `DeepLinkHandler` compare against) turns
+  // it back into a plain route before matching against it.
+  const match = /^\/learn\/([^/]+)\/(lesson|practice|quiz)$/.exec(normalizePathname(pathname));
+  return match ? `/learn/${match[1]}` : null;
+}
 
 /**
  * Handles the Android hardware back button.
@@ -27,6 +55,12 @@ export function BackButtonHandler() {
     if (!Capacitor.isNativePlatform()) return;
 
     const listenerPromise = App.addListener("backButton", ({ canGoBack }) => {
+      const hubHref = categoryHubHref(window.location.pathname);
+      if (hubHref) {
+        window.location.href = toNativeStaticHref(hubHref);
+        return;
+      }
+
       if (canGoBack) {
         window.history.back();
       } else {

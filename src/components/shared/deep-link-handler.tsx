@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App, type URLOpenListenerEvent } from "@capacitor/app";
-import { toNativeStaticHref } from "@/components/shared/static-link";
+import { isCurrentLocation, toNativeStaticHref } from "@/components/shared/static-link";
 
 /**
  * Turns an incoming `https://` URL (an Android App Link tap, or the iOS
@@ -26,6 +26,19 @@ function navigateToIncomingUrl(rawUrl: string) {
   if (incoming.protocol !== "http:" && incoming.protocol !== "https:") return;
 
   const relative = `${incoming.pathname}${incoming.search}${incoming.hash}`;
+
+  // Guard against navigating to the page we're already on. This matters a
+  // lot more here than it does for a normal tap: `getLaunchUrl()` below
+  // keeps returning the *same* launch intent for as long as the Android
+  // Activity is alive, not just on the first check. Since this is a static
+  // export, "navigate" below is a hard `window.location` reload (there's no
+  // server to route an extensionless URL) — so without this check, landing
+  // on the deep-linked page remounts this component, which re-reads
+  // `getLaunchUrl()`, gets the same URL back, and reloads the very page it
+  // just loaded... forever. That infinite reload is what shows up as the
+  // app rapidly flashing/blinking right after opening a shared link.
+  if (isCurrentLocation(relative)) return;
+
   window.location.href = toNativeStaticHref(relative);
 }
 

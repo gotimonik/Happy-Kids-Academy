@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Timer } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ConfettiOverlay } from "@/components/shared/confetti-overlay";
 import { FeedbackToast } from "@/components/shared/feedback-toast";
 import { OptionButton, type OptionState } from "@/features/quiz/option-button";
 import { QuestionCard } from "@/features/quiz/question-card";
@@ -12,6 +10,7 @@ import { createMixedQuestionGenerator } from "@/lib/quiz/generators";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
 import { useProgressStore } from "@/store/progress-store";
+import { GameCompleteModal } from "../game-complete-modal";
 import { useSpeedRound } from "./use-speed-round";
 
 const ACCENT = "#EE6352";
@@ -46,17 +45,13 @@ export function SpeedRoundGame() {
 
   if (status === "finished") {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center shadow-lg">
-        <ConfettiOverlay />
-        <h2 className="font-display text-3xl font-bold">Time&apos;s up!</h2>
-        <p className="text-lg font-bold text-primary">
-          You answered {score} out of {answered} correctly
-        </p>
-        <p className="text-sm font-bold text-[#E17055]">+{score * 2} coins</p>
-        <Button type="button" size="md" onClick={restart}>
-          Play Again
-        </Button>
-      </div>
+      <GameCompleteModal
+        trigger
+        title="Time's up! 🎉"
+        description={`You answered ${score} out of ${answered} correctly — +${score * 2} coins!`}
+        onPlayAgain={restart}
+        accentColor={ACCENT}
+      />
     );
   }
 

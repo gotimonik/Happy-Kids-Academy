@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
+import { GameCompleteModal } from "../game-complete-modal";
 import { useMemoryGame } from "./use-memory-game";
 
 export function MemoryGame() {
@@ -45,14 +45,12 @@ export function MemoryGame() {
         })}
       </div>
 
-      {isComplete && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-success/10 p-5 text-center">
-          <p className="font-display text-lg font-bold text-success">All pairs matched! 🎉</p>
-          <Button type="button" size="md" onClick={reset}>
-            Play Again
-          </Button>
-        </div>
-      )}
+      <GameCompleteModal
+        trigger={isComplete}
+        title="All pairs matched! 🎉"
+        description={`Moves: ${moves} \u2022 Pairs found: ${matchedPairs.size} / ${deck.length / 2}`}
+        onPlayAgain={reset}
+      />
     </div>
   );
 }

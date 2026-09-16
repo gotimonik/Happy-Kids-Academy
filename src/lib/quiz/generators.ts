@@ -2,6 +2,7 @@ import type { LearningCategory } from "@/types/category";
 import type { LearningItem } from "@/types/item";
 import type { QuizQuestion } from "@/types/quiz";
 import { alphabetCategory } from "@/data/categories/alphabet";
+import type { GkFact } from "@/data/general-knowledge";
 import { createNoRepeatGenerator } from "./no-repeat";
 import { seededShuffle } from "./seeded-random";
 import { buildOptions, pickDistractors } from "./utils";
@@ -206,30 +207,57 @@ export function createPatternsQuestionGenerator(): () => QuizQuestion {
   return createNoRepeatGenerator(PATTERNS_PAIRS, buildPatternsQuestion);
 }
 
+/** A single general-knowledge trivia question, built from one `GkFact`. */
+function buildGkQuestion(fact: GkFact): QuizQuestion {
+  return {
+    prompt: fact.prompt,
+    correctAnswer: fact.correctAnswer,
+    options: buildOptions(fact.correctAnswer, fact.distractors),
+  };
+}
+
 /**
- * Builds today's fixed set of `count` Daily Challenge questions — drawn
- * from every item in every category, deterministically shuffled from
- * `seed` (the day's local date key) so every player who opens the
- * challenge on the same calendar day gets the exact same questions, with
- * no server involved. Unlike the other generators in this file, this one
+ * Builds today's fixed set of `count` Daily Challenge questions — mostly
+ * drawn from every item in every category (the usual picture-identification
+ * questions), with roughly a third reserved for general-knowledge trivia
+ * from `gkFacts` so the challenge isn't only ever "what is this icon".
+ * Every shuffle is deterministically seeded from `seed` (the day's local
+ * date key) so every player who opens the challenge on the same calendar
+ * day gets the exact same questions, in the exact same order, with no
+ * server involved. Unlike the other generators in this file, this one
  * commits to its full question list up front rather than drawing lazily,
  * since the whole point is "the same few questions all day", not an
  * ever-fresh stream — the returned function just replays that fixed list.
  */
 export function createDailyChallengeGenerator(
   categories: readonly LearningCategory[],
+  gkFacts: readonly GkFact[],
   seed: string,
   count: number,
 ): () => QuizQuestion {
-  const pool = categories.flatMap((category) =>
+  const itemPool = categories.flatMap((category) =>
     category.items.map((item) => ({ category, item })),
   );
-  if (pool.length === 0) {
+  if (itemPool.length === 0) {
     throw new Error("No categories available for the daily challenge");
   }
 
-  const picks = seededShuffle(pool, seed).slice(0, Math.min(count, pool.length));
-  const questions = picks.map(({ category, item }) => buildQuestionForItem(category, item));
+  // Reserve roughly a third of the challenge for GK trivia — capped so a
+  // short challenge never becomes *all* GK, and by however many facts
+  // actually exist — with the rest filled from the usual category items.
+  const gkCount = Math.min(gkFacts.length, Math.max(1, Math.round(count / 3)));
+  const itemCount = Math.max(0, count - gkCount);
+
+  const pickedItems = seededShuffle(itemPool, `${seed}:items`).slice(0, Math.min(itemCount, itemPool.length));
+  const pickedGk = seededShuffle(gkFacts, `${seed}:gk`).slice(0, gkCount);
+
+  const questions = seededShuffle(
+    [
+      ...pickedItems.map(({ category, item }) => buildQuestionForItem(category, item)),
+      ...pickedGk.map((fact) => buildGkQuestion(fact)),
+    ],
+    `${seed}:order`,
+  );
 
   let index = 0;
   return () => {

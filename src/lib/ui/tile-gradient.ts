@@ -30,3 +30,30 @@ export function heroGradient(): CSSProperties {
     backgroundImage: "linear-gradient(135deg, #6C5CE7 0%, #A45EEA 50%, #FF707D 100%)",
   };
 }
+
+/**
+ * A soft, semi-transparent glow blob behind a hero icon, fading a single
+ * accent color into transparency. Used by `StreakWelcomeModal` so the glow
+ * behind its hero icon matches whichever category is picked for the day
+ * instead of a fixed two-color blend that ignores what's actually shown.
+ */
+export function glowGradient(color: string): CSSProperties {
+  return {
+    backgroundImage: `radial-gradient(circle at 30% 30%, color-mix(in srgb, ${color} 55%, transparent) 0%, color-mix(in srgb, ${color} 15%, transparent) 70%, transparent 100%)`,
+  };
+}
+
+/**
+ * The same "tactile" 3D-edge shadow language `Button` uses (see
+ * button.tsx) — a hard-edged "lip" in a darker shade of the color plus a
+ * soft ambient glow beneath it, so a badge/card reads as a raised, tactile
+ * object instead of a flat shape. Button builds this from a CSS custom
+ * property (`--btn-accent`) since its color can come from a theme variant;
+ * this version takes a plain color directly for one-off elements (a hero
+ * icon badge, a spotlight card) that aren't built from that component.
+ */
+export function tactileShadow(color: string, lift = 4): CSSProperties {
+  return {
+    boxShadow: `0 ${lift}px 0 0 color-mix(in srgb, ${color} 100%, black 22%), 0 ${lift * 2.5}px ${lift * 4}px -${lift * 2}px color-mix(in srgb, ${color} 60%, transparent)`,
+  };
+}

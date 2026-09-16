@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Eraser, RefreshCw, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eraser, Lightbulb, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { trackEvent } from "@/lib/analytics/track-event";
@@ -132,6 +132,32 @@ export function PracticePageClient({ category }: { category: LearningCategory })
 
   const currentStars = currentProgress ? starsForRatio(currentProgress.bestScore / 100) : 0;
 
+  // What the progress bar's tooltip shows, and whether it's forced open
+  // rather than left to hover (see `Progress`'s own doc for why): a
+  // just-scored result takes priority while its flash is up, falling back
+  // to this letter's best score once that fades (or immediately, if there
+  // was never a fresh result to show). `undefined` means neither applies,
+  // so the tooltip just reverts to plain hover-for-percentage.
+  const progressTooltip =
+    result ? (
+      <span className="flex items-center gap-1.5">
+        <span>{t("practice.resultFlash", { score: result.score })}</span>
+        {result.coins > 0 && <span>{t("practice.coinsEarned", { count: result.coins })}</span>}
+      </span>
+    ) : hydrated && currentProgress ? (
+      <span className="flex items-center gap-1.5">
+        {t("practice.bestScorePercent", { score: currentProgress.bestScore })}
+        <span className="flex items-center gap-0.5" aria-hidden="true">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Star
+              key={i}
+              className={i < currentStars ? "size-3 fill-current text-[#FDCB6E]" : "size-3 fill-current opacity-40"}
+            />
+          ))}
+        </span>
+      </span>
+    ) : undefined;
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-center text-sm text-muted-foreground">
@@ -146,59 +172,110 @@ export function PracticePageClient({ category }: { category: LearningCategory })
         <Progress
           value={guides.length > 0 ? (tracedCount / guides.length) * 100 : 0}
           indicatorStyle={{ backgroundColor: category.color }}
+          tooltipContent={progressTooltip}
+          tooltipOpen={progressTooltip !== undefined}
         />
       </div>
 
       {/*
-        A fixed-height slot for whichever status pill applies (or neither) —
-        both pills below share the exact same padding/font size specifically
-        so swapping between them, or between "one of them" and "neither",
-        never changes this row's height. Without that, the page visibly
-        jumped every time the "just scored" pill appeared after Next Guide
-        and then disappeared again a couple seconds later.
+        A screen reader still gets the just-scored result the instant it
+        happens — the tooltip above it is a *visual* affordance (and,
+        being a portal, silent to assistive tech until it's focused/hovered
+        the trigger), so this is the only way that announcement actually
+        reaches anyone relying on one.
       */}
-      <div className="mx-auto flex h-7 items-center justify-center">
-        {result ? (
-          <div
-            className="flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1 text-xs font-bold text-success"
-            aria-live="polite"
-          >
-            <span>{t("practice.resultFlash", { score: result.score })}</span>
-            {result.coins > 0 && <span>{t("practice.coinsEarned", { count: result.coins })}</span>}
-          </div>
-        ) : (
-          hydrated &&
-          currentProgress && (
-            <div className="flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1 text-xs font-bold text-muted-foreground">
-              {t("practice.bestScorePercent", { score: currentProgress.bestScore })}
-              <span className="flex items-center gap-0.5" aria-hidden="true">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <Star
-                    key={i}
-                    className={
-                      i < currentStars ? "size-3.5 fill-current text-[#FDCB6E]" : "size-3.5 fill-current opacity-25"
-                    }
-                  />
-                ))}
-              </span>
-            </div>
-          )
-        )}
-      </div>
+      {result && (
+        <span className="sr-only" aria-live="polite">
+          {t("practice.resultFlash", { score: result.score })}
+          {result.coins > 0 && ` ${t("practice.coinsEarned", { count: result.coins })}`}
+        </span>
+      )}
 
-      <TraceCanvas key={index} ref={canvasRef} guideText={guideText} strokeColor={category.color} />
+      {/*
+        A quick "did you know" fact about whatever's being traced (see
+        `LearningItem.fact`) — kids get a little real-world context for the
+        letter/number they're practicing, not just the glyph itself.
+        Categories that don't have facts yet (Gujarati, Hindi, Numbers)
+        simply render nothing here. `line-clamp-2` keeps this row's height
+        predictable regardless of how long a given fact is, which is what
+        the trace pad's own height reservation just below is budgeted
+        against.
+      */}
+      {currentGuide?.fact && (
+        <p className="mx-auto flex max-w-md items-start gap-1.5 text-center text-xs text-muted-foreground sm:text-sm">
+          <Lightbulb
+            aria-hidden="true"
+            className="mt-0.5 size-3.5 shrink-0 sm:size-4"
+            style={{ color: category.color }}
+          />
+          <span className="line-clamp-2 text-left">{currentGuide.fact}</span>
+        </p>
+      )}
 
-      <div className="flex flex-wrap justify-center gap-3">
-        {index > 0 && (
-          <Button type="button" variant="outline" size="md" onClick={handleBack}>
-            <ChevronLeft className="size-5" aria-hidden="true" />
-            {t("learn.back")}
-          </Button>
-        )}
+      {/*
+        `containerClassName` caps the pad's height (not just its width) to
+        whatever room is actually left above/below it. Without this, the
+        canvas's own `aspect-square` sizing only ever looked at available
+        *width* — so on a short/wide desktop window the square could render
+        taller than (viewport height minus everything else on the page),
+        pushing its bottom edge down into the same strip of the screen the
+        sticky button bar below pins itself to. Since the bar is *always*
+        kept visible (see the sticky bar's own comment below), it wins that
+        fight and visually sits on top of the pad's bottom edge instead of
+        the pad shrinking to make room. Reserving space this way instead
+        keeps the pad and the bar from ever overlapping, whatever the
+        viewport's height. `min-h-64` is just a floor so the pad never
+        collapses to nothing on a genuinely tiny viewport (a rare case where
+        some scrolling is an acceptable fallback).
+      */}
+      <TraceCanvas
+        key={index}
+        ref={canvasRef}
+        guideText={guideText}
+        strokeColor={category.color}
+        containerClassName={
+          currentGuide?.fact
+            ? "max-h-[calc(100dvh-29rem)] min-h-64"
+            : "max-h-[calc(100dvh-25rem)] min-h-64"
+        }
+      />
+
+      {/* Sticky rather than a plain in-flow row: the trace pad above is a
+          tall `aspect-square` card, so on a shorter viewport these buttons
+          would otherwise sit below the fold, needing a scroll to reach on
+          every single letter. Sticking to the bottom of the viewport (the
+          same treatment `TimesTablesHub`'s "Pick a table" bar uses) keeps
+          Next Guide reachable at all times without shrinking the pad
+          itself.
+          Capped to the same `max-w-md` as the progress bar and the trace
+          pad above (rather than stretching edge-to-edge): a full-width bar
+          with a small cluster of buttons centered inside it reads as an odd
+          mismatch against the narrower card stack above it. `flex-1` on
+          every button then fills that matched width evenly instead of
+          leaving slack around a centered clump. Back is always rendered
+          (just disabled on the first letter) instead of being added/removed
+          from the row, so the bar keeps the same three-button shape and
+          spacing throughout — matching `LessonCarousel`'s Back/Next bar,
+          the same "generic" pattern used elsewhere in the app. */}
+      <div className="sticky bottom-3 z-10 mx-auto flex w-full max-w-md items-center gap-2 rounded-3xl border border-border bg-card/95 p-2.5 shadow-lg backdrop-blur sm:gap-3 sm:p-4">
         <Button
           type="button"
           variant="outline"
-          size="md"
+          size="sm"
+          aria-label={t("learn.back")}
+          onClick={handleBack}
+          disabled={index === 0}
+          className="flex-1 sm:h-11 sm:gap-2 sm:px-5 sm:text-sm"
+        >
+          <ChevronLeft className="size-4 sm:size-5" aria-hidden="true" />
+          <span className="hidden sm:inline">{t("learn.back")}</span>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label="Clear"
+          className="flex-1 sm:h-11 sm:gap-2 sm:px-5 sm:text-sm"
           onClick={() => {
             canvasRef.current?.clear();
             // Otherwise a stale pre-Clear snapshot from an earlier visit
@@ -208,18 +285,19 @@ export function PracticePageClient({ category }: { category: LearningCategory })
             if (currentItemId) sessionDrawingsRef.current.delete(currentItemId);
           }}
         >
-          <Eraser className="size-5" aria-hidden="true" />
-          Clear
+          <Eraser className="size-4 sm:size-5" aria-hidden="true" />
+          <span className="hidden sm:inline">Clear</span>
         </Button>
         <Button
           type="button"
-          size="md"
+          size="sm"
           accentColor={category.color}
-          className="text-white hover:brightness-110"
+          className="flex-1 text-white hover:brightness-110 sm:h-11 sm:gap-2 sm:px-5 sm:text-sm"
           onClick={handleNext}
         >
-          <RefreshCw className="size-5" aria-hidden="true" />
-          Next Guide
+          <span className="hidden sm:inline">Next Guide</span>
+          <span className="sm:hidden">Next</span>
+          <ChevronRight className="size-4 sm:size-5" aria-hidden="true" />
         </Button>
       </div>
     </div>

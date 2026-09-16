@@ -16,6 +16,8 @@ export function namedItems(
   detail: string,
   sounds?: readonly string[],
   images?: readonly (string | undefined)[],
+  facts?: readonly (string | undefined)[],
+  longDescriptions?: readonly (string | undefined)[],
 ): LearningItem[] {
   return names.map((name, index) => ({
     id: `${slug}-${index}`,
@@ -25,5 +27,7 @@ export function namedItems(
     detail,
     speech: name,
     sound: sounds?.[index] || undefined,
+    fact: facts?.[index],
+    longDescription: longDescriptions?.[index],
   }));
 }

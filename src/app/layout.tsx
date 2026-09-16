@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AnimatedBackground } from "@/components/shared/animated-background";
 import { AppShell } from "@/components/shared/app-shell";
+import { AppUpdateHandler } from "@/components/shared/app-update-handler";
 import { BackButtonHandler } from "@/components/shared/back-button-handler";
 import { DeepLinkHandler } from "@/components/shared/deep-link-handler";
 import { SplashScreenHandler } from "@/components/shared/splash-screen-handler";
@@ -139,6 +140,7 @@ export default function RootLayout({
           <SplashScreenHandler />
           <BackButtonHandler />
           <DeepLinkHandler />
+          <AppUpdateHandler />
           <ScrollToTop />
           <a
             href="#main-content"

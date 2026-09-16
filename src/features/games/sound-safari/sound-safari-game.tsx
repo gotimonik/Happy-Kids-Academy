@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import { Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfettiOverlay } from "@/components/shared/confetti-overlay";
 import { FeedbackToast } from "@/components/shared/feedback-toast";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
+import { GameCompleteModal } from "../game-complete-modal";
 import { useSoundSafari } from "./use-sound-safari";
 
 const ACCENT = "#00B894";
@@ -23,18 +23,13 @@ export function SoundSafariGame() {
 
   if (status === "finished") {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card p-8 text-center shadow-lg">
-        <ConfettiOverlay />
-        <h2 className="font-display text-3xl font-bold">
-          {score >= totalRounds * 0.8 ? "Amazing ears!" : "Well done!"}
-        </h2>
-        <p className="text-lg font-bold text-primary">
-          You matched {score} out of {totalRounds} sounds
-        </p>
-        <Button type="button" size="md" onClick={restart}>
-          Play Again
-        </Button>
-      </div>
+      <GameCompleteModal
+        trigger
+        title={score >= totalRounds * 0.8 ? "Amazing ears! 🎉" : "Well done! 🎉"}
+        description={`You matched ${score} out of ${totalRounds} sounds.`}
+        onPlayAgain={restart}
+        accentColor={ACCENT}
+      />
     );
   }
 

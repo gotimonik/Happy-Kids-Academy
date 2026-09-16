@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StaticLink } from "@/components/shared/static-link";
 import { categories } from "@/data/categories";
+import { generalKnowledgeFacts } from "@/data/general-knowledge";
 import { localDateKey } from "@/lib/date/local-date-key";
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { createDailyChallengeGenerator } from "@/lib/quiz/generators";
@@ -12,16 +13,17 @@ import { QuizSession } from "@/features/quiz/quiz-session";
 import { useDailyChallengeStore } from "@/store/daily-challenge-store";
 import { useProgressStore } from "@/store/progress-store";
 
-const DAILY_CHALLENGE_ROUNDS = 5;
+const DAILY_CHALLENGE_ROUNDS = 7;
 const DAILY_CHALLENGE_BONUS_COINS = 20;
 const DAILY_CHALLENGE_COLOR = "#E84393";
 
 /**
- * A special 5-question mixed quiz that's the same for everyone on a given
- * calendar day (see `createDailyChallengeGenerator`) and pays out an extra
- * flat coin bonus on top of the normal per-question reward — a reason to
- * open the app once a day beyond the streak itself, and available only
- * once per day.
+ * A special 7-question mixed quiz that's the same for everyone on a given
+ * calendar day (see `createDailyChallengeGenerator`) — a blend of the usual
+ * picture-identification questions plus a few general-knowledge trivia
+ * questions for variety — and pays out an extra flat coin bonus on top of
+ * the normal per-question reward — a reason to open the app once a day
+ * beyond the streak itself, and available only once per day.
  */
 export function DailyChallengeClient() {
   const lastCompletedDate = useDailyChallengeStore((state) => state.lastCompletedDate);
@@ -32,7 +34,7 @@ export function DailyChallengeClient() {
 
   const today = useMemo(() => localDateKey(), []);
   const generateQuestion = useMemo(
-    () => createDailyChallengeGenerator(categories, today, DAILY_CHALLENGE_ROUNDS),
+    () => createDailyChallengeGenerator(categories, generalKnowledgeFacts, today, DAILY_CHALLENGE_ROUNDS),
     [today],
   );
 

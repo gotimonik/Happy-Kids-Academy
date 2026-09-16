@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/shared/json-ld";
 import { CategoryGrid } from "@/features/home/category-grid";
 import { HomeHero } from "@/features/home/home-hero";
+import { InstallAppBanner } from "@/features/home/install-app-banner";
 import { StreakWelcomeModal } from "@/features/home/streak-welcome-modal";
 import { websiteJsonLd } from "@/lib/seo/json-ld";
 
@@ -17,6 +18,7 @@ export default function HomePage() {
       <JsonLd data={websiteJsonLd()} />
       <StreakWelcomeModal />
       <HomeHero />
+      <InstallAppBanner />
       <CategoryGrid />
     </div>
   );

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
+import { GameCompleteModal } from "../game-complete-modal";
 import { PAD_COUNT, useSimonPattern } from "./use-simon-pattern";
 
 const PAD_COLORS = ["#EE6352", "#45AAF2", "#37C183", "#FFD166"];
@@ -49,16 +49,14 @@ export function SimonPatternGame() {
         ))}
       </div>
 
-      {phase === "gameover" && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-destructive/10 p-5 text-center">
-          <p className="font-display text-lg font-bold text-destructive">
-            You reached level {level}!
-          </p>
-          <Button type="button" size="md" onClick={start}>
-            Play Again
-          </Button>
-        </div>
-      )}
+      <GameCompleteModal
+        trigger={phase === "gameover"}
+        title={`You reached level ${level}!`}
+        description={bestLevel > level ? `Your best is still level ${bestLevel} — give it another go!` : undefined}
+        onPlayAgain={start}
+        accentColor="var(--destructive)"
+        celebrate={false}
+      />
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function toNativeStaticHref(href: string): string {
 }
 
 /** Strips the static-export `.html`/`index.html` suffix so paths compare like real routes. */
-function normalizePathname(pathname: string): string {
+export function normalizePathname(pathname: string): string {
   let path = pathname;
   if (path.endsWith("/index.html")) {
     path = path.slice(0, -"/index.html".length) || "/";
@@ -75,7 +75,7 @@ function normalizePathname(pathname: string): string {
  * app tab bars behave. (In the browser this also just skips a redundant
  * client-side navigation to the same URL.)
  */
-function isCurrentLocation(href: string): boolean {
+export function isCurrentLocation(href: string): boolean {
   if (
     href.startsWith("#") ||
     href.startsWith("mailto:") ||

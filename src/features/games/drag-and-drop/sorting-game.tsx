@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics/track-event";
 import { cn } from "@/lib/utils";
+import { GameCompleteModal } from "../game-complete-modal";
 import { useSortingGame } from "./use-sorting-game";
 import type { SortItem } from "./use-sorting-game";
 
@@ -174,14 +174,12 @@ export function SortingGame() {
         ))}
       </div>
 
-      {isComplete && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-success/10 p-5 text-center">
-          <p className="font-display text-lg font-bold text-success">All sorted! 🎉</p>
-          <Button type="button" size="md" onClick={reset}>
-            Play Again
-          </Button>
-        </div>
-      )}
+      <GameCompleteModal
+        trigger={isComplete}
+        title="All sorted! 🎉"
+        description={`You sorted all ${items.length} items into the right bucket.`}
+        onPlayAgain={reset}
+      />
     </div>
   );
 }

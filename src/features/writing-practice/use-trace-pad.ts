@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { useTheme } from "next-themes";
 
 export type DrawTool = "pencil" | "eraser";
 export type ToolSize = "small" | "medium" | "large";
@@ -50,14 +49,6 @@ const GUIDE_INK_FIT_RATIO = 0.82;
 const GUIDE_MASK_ALPHA_THRESHOLD = 20;
 const INK_ALPHA_THRESHOLD = 120;
 
-/** Turns a computed `rgb(...)`/`rgba(...)` color string into one with a new alpha. */
-function withAlpha(color: string, alpha: number): string {
-  const channels = color.match(/[\d.]+/g);
-  if (!channels || channels.length < 3) return color;
-  const [r, g, b] = channels;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 // Gujarati (U+0A80–U+0AFF) glyphs live only in the separate "Baloo Bhai 2"
 // font (`--font-baloo-gujarati`); everything else — Latin and Devanagari
 // (Hindi) — is covered by the main `--font-baloo` (Baloo 2) font. Canvas
@@ -68,7 +59,7 @@ function withAlpha(color: string, alpha: number): string {
 // instead of the intended letter on some real devices. Reading the right CSS
 // variable up front means the canvas always draws from a font that genuinely
 // contains the glyphs it's being asked for.
-const GUJARATI_RANGE = /[\u0A80-\u0AFF]/;
+const GUJARATI_RANGE = /[઀-૿]/;
 
 /** Picks the `--font-baloo*` CSS variable whose loaded font actually has glyphs for `text`'s script. */
 function guideFontVariable(text: string): string {
@@ -181,9 +172,6 @@ export function useTracePad({
   // callback reporting the size we already painted at.
   const lastPaintedSizeRef = useRef<{ width: number; height: number } | null>(null);
   const onCanUndoChangeRef = useRef(onCanUndoChange);
-  // Only used to trigger a redraw when the user toggles light/dark mode —
-  // the actual color comes from the container's computed style below.
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     strokeColorRef.current = strokeColor;
@@ -253,11 +241,22 @@ export function useTracePad({
         "sans-serif";
 
       // A fixed low-opacity black guide disappears entirely against a dark
-      // card background. Derive the guide color from the current (inherited)
-      // foreground color instead, so it stays visible in both themes.
-      const foreground = getComputedStyle(container).color;
-
-      ctx.fillStyle = withAlpha(foreground, GUIDE_OPACITY);
+      // card background, so the fill color has to flip with the theme.
+      // This intentionally does NOT read the inherited `color` via
+      // `getComputedStyle` and reparse it into an rgba() string: modern
+      // Chromium/WebView builds can report a themed CSS custom property's
+      // *computed* `color` back as a `color(...)`/`oklch(...)` function
+      // rather than legacy `rgb(...)`, and naively regexing numbers out of
+      // that (the previous approach) silently produced a nonsense fill
+      // color — which is what made the guide letter render as a
+      // low-contrast, wrong-hued (reddish/maroon) smudge instead of a
+      // clearly visible glyph on real dark-mode devices. Reading the
+      // `dark` class directly off the root element is synchronous, matches
+      // next-themes' own blocking pre-hydration script exactly, and a
+      // plain literal hex color needs no color-function parsing at all.
+      const isDark = document.documentElement.classList.contains("dark");
+      ctx.fillStyle = isDark ? "#F5F0E4" : "#241F3D";
+      ctx.globalAlpha = GUIDE_OPACITY;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
@@ -303,6 +302,10 @@ export function useTracePad({
       drawY = Math.min(Math.max(drawY, height * 0.1), height * 0.9);
 
       ctx.fillText(guideText, drawX, drawY);
+      // Reset immediately — `globalAlpha` is a general context property, not
+      // scoped to this one fill, so leaving it at `GUIDE_OPACITY` would also
+      // fade every pencil/eraser stroke drawn afterward.
+      ctx.globalAlpha = 1;
 
       // Snapshot just the alpha channel of what's on the canvas right now —
       // purely the guide glyph, since nothing else has been drawn yet this
@@ -323,12 +326,10 @@ export function useTracePad({
     // width, composite mode) to its default, so restore the current pen here.
     ctx.strokeStyle = strokeColorRef.current;
     applyToolStyle(ctx, toolRef.current, sizeRef.current);
-    // Deliberately NOT depending on `resolvedTheme` here: the color above
-    // comes from `getComputedStyle`, which already reflects whatever theme
-    // next-themes' blocking init script applied to <html> before this ever
-    // ran — see the dedicated theme-change effect below for why redrawing
-    // again specifically when `resolvedTheme` *resolves* (rather than
-    // genuinely changes) would be both redundant and actively harmful.
+    // Repainting again on a theme change is handled by the dedicated
+    // MutationObserver effect below, not by depending on anything theme-
+    // related here — this callback's own identity only needs to change
+    // when the guide text itself changes.
   }, [guideText, applyToolStyle]);
 
   // Mount / resize / guide-text-or-theme-change: a genuine repaint whose
@@ -352,25 +353,29 @@ export function useTracePad({
     drawGuideRef.current = drawGuide;
   }, [drawGuide]);
 
-  // `next-themes` resolves `resolvedTheme` asynchronously on mount (reading
-  // localStorage/system preference takes an effect, so it's `undefined` for
-  // the first render or two of a fresh page load) — but the DOM's `class`
-  // attribute is already set correctly *before* hydration, via next-themes'
-  // own blocking init script (`suppressHydrationWarning` on `<html>` in
-  // `layout.tsx` is the tell). So `getComputedStyle` above already reads the
-  // right color from the very first paint, and repainting again purely
-  // because `resolvedTheme` *became known* (`undefined` → a value) is both
-  // redundant and, worse, can land after and silently wipe anything that ran
-  // right after mount — e.g. Writing Practice restoring an in-progress
-  // drawing. Only a real *known-theme → different-known-theme* toggle later
-  // (the user actually flipping light/dark) needs to trigger a repaint here.
-  const previousResolvedThemeRef = useRef(resolvedTheme);
+  // Repaints the guide the instant the app's theme actually flips. The
+  // guide's fill color (see `paintGuide` above) is read directly off
+  // `<html>`'s `dark` class, so watching that exact class — rather than
+  // `next-themes' own React state (`useTheme().resolvedTheme`) — is what
+  // actually guarantees this fires in lockstep with the color logic it's
+  // meant to refresh, and sidesteps any timing gap between next-themes
+  // updating the DOM and that state re-rendering this component. This was
+  // the reported bug: toggling the theme from the menu changed every other
+  // themed color on screen (plain CSS, no repaint needed) but left the
+  // canvas-drawn guide letter showing its old color until a full page
+  // reload re-ran `paintGuide` from scratch on mount.
+  // A `MutationObserver` only ever fires on a genuine attribute mutation,
+  // never for the class already present at mount, so — unlike the old
+  // state-diffing approach — no extra guard is needed to skip an initial,
+  // already-correct paint.
   useEffect(() => {
-    const previous = previousResolvedThemeRef.current;
-    previousResolvedThemeRef.current = resolvedTheme;
-    if (previous === undefined || previous === resolvedTheme) return;
-    drawGuideRef.current();
-  }, [resolvedTheme]);
+    if (typeof MutationObserver === "undefined") return;
+    const observer = new MutationObserver(() => {
+      drawGuideRef.current();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     drawGuide();
