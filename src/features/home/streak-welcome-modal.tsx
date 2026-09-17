@@ -115,7 +115,10 @@ export function StreakWelcomeModal() {
           }}
         >
           {currentStreak > 1 && (
-            <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
+            // `left-4`, not `right-4`: DialogContent's own close (X) button
+            // is always pinned to the top-right corner, so anything else
+            // pinned there sits directly on top of it.
+            <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
               🔥 {currentStreak}
             </span>
           )}
