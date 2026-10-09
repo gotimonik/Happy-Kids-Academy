@@ -18,7 +18,7 @@ export interface FeedbackToastProps {
  */
 export function FeedbackToast({ status, message }: FeedbackToastProps) {
   return (
-    <div className="pointer-events-none fixed inset-x-4 bottom-20 z-40 flex justify-center md:bottom-6">
+    <div className="pointer-events-none fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-40 flex justify-center md:bottom-[calc(env(safe-area-inset-bottom)+1.5rem)]">
       <AnimatePresence>
         {status && (
           <motion.div

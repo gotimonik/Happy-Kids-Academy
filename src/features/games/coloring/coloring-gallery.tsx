@@ -29,7 +29,7 @@ function ColoringDialog({ coloring, onClose }: { coloring: SavedColoring; onClos
   async function handleSaveToDevice() {
     setSaveState("saving");
     const ok = await saveImageToDevice(coloring.dataUrl, `my-coloring-${coloring.id}.png`);
-    setSaveState(ok ? "saved" : "error");
+    setSaveState(ok === null ? "idle" : ok ? "saved" : "error");
   }
 
   return (

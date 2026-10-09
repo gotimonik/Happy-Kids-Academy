@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		Universal Link: the iOS counterpart of the Android App Link in
+		android/app/src/main/AndroidManifest.xml. Lets a tapped
+		happykidsacademy.playfantacy.com link (e.g. "Share my progress" from the
+		Rewards page) open straight into the installed app. Verified against
+		public/.well-known/apple-app-site-association; routed in-app by
+		src/components/shared/deep-link-handler.tsx.
+	-->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:happykidsacademy.playfantacy.com</string>
+	</array>
+</dict>
+</plist>

@@ -1,8 +1,9 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics/config";
 
 /**
@@ -17,11 +18,24 @@ import { GA_MEASUREMENT_ID } from "@/lib/analytics/config";
  * Privacy: Google Signals and ad-personalization signals are explicitly
  * disabled below, since this is a children's app and should never feed
  * advertising/remarketing profiles. GA4 anonymizes IP by default.
+ *
+ * Not loaded at all in the iOS app: App Store Kids Category apps may not
+ * include third-party analytics (App Review Guidelines 1.3 / 5.1.4), and the
+ * iOS App Privacy label declares "Data Not Collected". Decided after mount,
+ * since the same static HTML serves the website, Android and iOS.
  */
 export function GoogleAnalytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isFirstLoad = useRef(true);
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    // One-time client-only platform check (same pattern as the hydration
+    // guards in use-store-hydrated.ts / theme-toggle.tsx).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnabled(Capacitor.getPlatform() !== "ios");
+  }, []);
 
   useEffect(() => {
     if (!GA_MEASUREMENT_ID || typeof window.gtag !== "function") return;
@@ -43,7 +57,7 @@ export function GoogleAnalytics() {
     });
   }, [pathname, searchParams]);
 
-  if (!GA_MEASUREMENT_ID) return null;
+  if (!GA_MEASUREMENT_ID || !enabled) return null;
 
   return (
     <>

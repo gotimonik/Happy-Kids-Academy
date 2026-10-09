@@ -1,6 +1,7 @@
 "use client";
 
 import { Capacitor } from "@capacitor/core";
+import { requestParentalGate } from "@/lib/parental-gate/request-parental-gate";
 
 /**
  * Saves a base64 PNG data URL to the user's device, picking the right
@@ -22,9 +23,12 @@ import { Capacitor } from "@capacitor/core";
  *
  * Returns whether the save/share flow completed (or was cancelled by the
  * person, which we don't treat as a failure) — false only on genuine error,
- * so the caller can show a "couldn't save" state.
+ * so the caller can show a "couldn't save" state. `null` = a grown-up didn't
+ * pass the iOS parental gate (the share sheet leaves the app, so on iOS it
+ * sits behind one), so nothing happened and the caller should just reset.
  */
-export async function saveImageToDevice(dataUrl: string, filename: string): Promise<boolean> {
+export async function saveImageToDevice(dataUrl: string, filename: string): Promise<boolean | null> {
+  if (!(await requestParentalGate())) return null;
   if (Capacitor.isNativePlatform()) {
     return saveViaCapacitor(dataUrl, filename);
   }

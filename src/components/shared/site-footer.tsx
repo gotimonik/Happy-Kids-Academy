@@ -15,7 +15,18 @@ export function SiteFooter() {
   const t = useTranslation();
 
   return (
-    <footer className="relative mt-10 border-t border-border bg-muted/40">
+    <footer
+      className="relative mt-10 border-t border-border bg-muted/40"
+      // Runs the footer's own background all the way to the bottom edge,
+      // with the home-indicator safe area (plus breathing room, and headroom
+      // for a future ad banner) inside it rather than as a separately
+      // colored band below it.
+      style={{
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 2.5rem)",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
+    >
       <span
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#6C5CE7] via-[#00B894] to-[#FDCB6E]"

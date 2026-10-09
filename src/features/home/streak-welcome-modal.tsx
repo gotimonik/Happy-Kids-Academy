@@ -9,6 +9,7 @@ import { StaticLink } from "@/components/shared/static-link";
 import { categories } from "@/data/categories";
 import { lastNDateKeys, localDateKey } from "@/lib/date/local-date-key";
 import { useTranslation } from "@/lib/i18n/use-translation";
+import { isVeryDark } from "@/lib/ui/color";
 import { pickTodaysCategory } from "@/lib/home/pick-todays-category";
 import { welcomeIcon } from "@/lib/home/welcome-icon";
 import { useStoreHydrated } from "@/lib/use-store-hydrated";
@@ -19,6 +20,20 @@ import { useStreakStore } from "@/store/streak-store";
 
 /** How many trailing calendar days a category is excluded from being picked again. */
 const NO_REPEAT_WINDOW_DAYS = 7;
+
+const BRAND_PURPLE = "#6C5CE7";
+
+/**
+ * The color the dialog's band and button are themed with. Usually today's
+ * pick's own category color, but a near-black one (Vehicles' charcoal)
+ * would turn the band and the main button into dark-gray slabs — invisible
+ * against the dark-mode card — so the whole dialog (band, icons, pick row,
+ * button) falls back to the brand purple for those.
+ */
+function accentFor(color: string | undefined): string {
+  if (!color || isVeryDark(color)) return BRAND_PURPLE;
+  return color;
+}
 
 /**
  * A light "welcome back" moment shown once per calendar day on the home
@@ -81,7 +96,7 @@ export function StreakWelcomeModal() {
   // there is one, otherwise the app's own brand purple — so the dialog
   // reads as "themed for today" instead of a fixed palette that never
   // changes.
-  const heroColor = pick ? pick.color : "#6C5CE7";
+  const heroColor = accentFor(pick?.color);
 
   useEffect(() => {
     if (!todaysRecord && freshPick) {
@@ -133,11 +148,11 @@ export function StreakWelcomeModal() {
             into the body below (rather than sitting inside the band) keeps
             one clear focal point instead of a glow blob + floating icon. */}
         <div className="relative z-10 -mt-10 flex justify-center">
-          <span className="flex size-20 items-center justify-center rounded-[1.75rem] border-4 border-white bg-white shadow-[0_8px_20px_-8px_rgba(20,20,43,0.35)]">
+          <span className="flex size-20 items-center justify-center rounded-[1.75rem] border-4 border-card bg-card shadow-[0_8px_20px_-8px_rgba(20,20,43,0.35)]">
             <span
               aria-hidden="true"
               className="relative flex size-16 items-center justify-center overflow-hidden rounded-2xl"
-              style={pick ? tileGradient(pick.color) : heroGradient()}
+              style={pick ? tileGradient(heroColor) : heroGradient()}
             >
               <span
                 aria-hidden="true"
@@ -167,32 +182,35 @@ export function StreakWelcomeModal() {
               href={`/learn/${pick.slug}`}
               onClick={dismiss}
               className="animate-in fade-in slide-in-from-bottom-1 fill-mode-both group mt-4 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left duration-500 delay-200 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
-              style={{ backgroundColor: `color-mix(in srgb, ${pick.color} 10%, white)` }}
+              // Tinted from the card color (not white) and with text mixed toward
+              // the foreground color (not black), so the row reads as a soft
+              // tint of the category in both light and dark mode.
+              style={{ backgroundColor: `color-mix(in srgb, ${heroColor} 14%, var(--card))` }}
             >
               <span
                 aria-hidden="true"
                 className="flex size-9 shrink-0 items-center justify-center rounded-[0.625rem] text-sm font-black leading-none text-white"
-                style={{ backgroundColor: pick.color }}
+                style={{ backgroundColor: heroColor }}
               >
                 {pick.icon}
               </span>
               <span className="min-w-0 flex-1">
                 <span
                   className="block text-[0.62rem] font-extrabold uppercase tracking-wide"
-                  style={{ color: `color-mix(in srgb, ${pick.color} 75%, black)` }}
+                  style={{ color: `color-mix(in srgb, ${heroColor} 55%, var(--foreground))` }}
                 >
                   {t("streak.todaysPick")}
                 </span>
                 <span
                   className="block truncate font-display text-sm font-bold"
-                  style={{ color: `color-mix(in srgb, ${pick.color} 88%, black)` }}
+                  style={{ color: `color-mix(in srgb, ${heroColor} 35%, var(--foreground))` }}
                 >
                   {pick.title}
                 </span>
               </span>
               <ChevronRight
                 className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5"
-                style={{ color: `color-mix(in srgb, ${pick.color} 60%, black)`, opacity: 0.4 }}
+                style={{ color: "var(--foreground)", opacity: 0.4 }}
                 aria-hidden="true"
               />
             </StaticLink>

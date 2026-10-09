@@ -2,7 +2,7 @@
 
 import { Capacitor } from "@capacitor/core";
 import Link from "next/link";
-import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { useEffect, type AnchorHTMLAttributes, type MouseEvent, type ReactNode } from "react";
 
 interface StaticLinkProps
   extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
@@ -113,10 +113,18 @@ export function StaticLink({
       return;
     }
 
-    if (!Capacitor.isNativePlatform()) {
-      // Plain web (browser dev/prod, not the packaged app): let Next's
-      // `<Link>` do its normal client-side transition below — no
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() === "ios") {
+      // Plain web (browser dev/prod, not the packaged app) and the iOS app:
+      // let Next's `<Link>` do its normal client-side transition below — no
       // `event.preventDefault()` here, so nothing further needs handling.
+      //
+      // On iOS a client-side transition only fetches the target page's
+      // static RSC payload (`/games.txt` — a real file in the export,
+      // served as `text/plain`, which Next accepts in export mode), so it
+      // needs no extensionless-URL rewriting and avoids the full-document
+      // reload (black flash + skeletons) a hard `.html` navigation causes.
+      // The one case it leaves behind — the document itself being reloaded
+      // at an extensionless URL — is handled by `useRecoverExtensionlessUrl`.
       return;
     }
 
@@ -140,4 +148,29 @@ export function StaticLink({
       {children}
     </Link>
   );
+}
+
+/**
+ * iOS app only. After a client-side navigation the WebView's URL is the
+ * extensionless route (e.g. `capacitor://localhost/games`). If the document
+ * is ever reloaded at that URL — iOS reloads the WebView after its web
+ * content process is killed in the background, or Next falls back to a
+ * full navigation — Capacitor's iOS asset handler serves the root
+ * `index.html` for any extensionless path, so the Home page would render
+ * under the `/games` URL. This runs once per document load and swaps such a
+ * URL for its real static file (`/games.html`). A no-op on web, Android,
+ * and every normal launch (which starts at `/`).
+ */
+export function useRecoverExtensionlessUrl() {
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== "ios") return;
+
+    const { pathname, search, hash } = window.location;
+    const relative = `${pathname}${search}${hash}`;
+    const staticHref = toNativeStaticHref(relative);
+
+    if (normalizePathname(pathname) !== "/" && staticHref !== relative) {
+      window.location.replace(staticHref);
+    }
+  }, []);
 }

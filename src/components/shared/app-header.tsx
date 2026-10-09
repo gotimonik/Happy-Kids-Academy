@@ -9,7 +9,15 @@ export function AppHeader() {
   return (
     <header
       className="sticky top-0 z-30 overflow-hidden text-white shadow-md"
-      style={heroGradient()}
+      // Safe-area padding: the gradient extends up behind the status bar /
+      // notch (and beside the notch in landscape), while the menu, logo and
+      // controls stay below/inside it. All 0 on devices without a cutout.
+      style={{
+        ...heroGradient(),
+        paddingTop: "env(safe-area-inset-top)",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
     >
       <span aria-hidden="true" className="absolute -right-10 -top-16 size-40 rounded-full bg-white/10" />
       <span aria-hidden="true" className="absolute -left-10 -bottom-16 size-32 rounded-full bg-black/10 blur-md" />

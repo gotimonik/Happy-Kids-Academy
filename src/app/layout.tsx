@@ -9,6 +9,7 @@ import { BackButtonHandler } from "@/components/shared/back-button-handler";
 import { DeepLinkHandler } from "@/components/shared/deep-link-handler";
 import { SplashScreenHandler } from "@/components/shared/splash-screen-handler";
 import { GoogleAnalytics } from "@/components/shared/google-analytics";
+import { ParentalGateHost } from "@/components/shared/parental-gate-host";
 import { PwaRegister } from "@/components/shared/pwa-register";
 import { ScrollToTop } from "@/components/shared/scroll-to-top";
 import { SessionTimeTracker } from "@/components/shared/session-time-tracker";
@@ -92,25 +93,42 @@ export const metadata: Metadata = {
     // platforms without file-sharing support) unfurl with no picture at all —
     // a static export can't generate a per-share image on demand, so this is
     // the app's one general-purpose "come play" preview card.
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Happy Kids Academy — Learn, Play, Grow" }],
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Happy Kids Academy — Learn, Play & Grow Every Day! Fun & interactive learning for kids.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Happy Kids Academy — Learn, Play, Grow",
     description:
       "A joyful, free learning world for young children: alphabet, numbers, math, shapes, colors, animals, Gujarati, Hindi, quizzes, and games.",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#6C5CE7" },
-    { media: "(prefers-color-scheme: dark)", color: "#1c1830" },
+    // One color regardless of the device's light/dark setting, since the
+    // app no longer follows it (see ThemeProvider below) — the brand purple
+    // matches the header in both of the app's own themes.
+    { color: "#6C5CE7" },
   ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // No pinch/double-tap zoom: the app's layout is already sized for small
+  // screens, and accidental zooms are common with young children.
+  userScalable: false,
+  // Lets the page draw under the iPhone notch/Dynamic Island and home
+  // indicator (iOS app + Safari) so `env(safe-area-inset-*)` reports real
+  // values; AppHeader/SiteFooter pad themselves with those insets. Has no
+  // effect on devices without a cutout, where the insets are 0.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -132,8 +150,11 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          // Light by default for everyone, whatever the device's own
+          // light/dark setting — the dark theme is only used when it's
+          // picked with the header's sun/moon toggle (remembered per device).
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <AnimatedBackground />
@@ -155,6 +176,8 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <GoogleAnalytics />
           </Suspense>
+          {/* iOS-only "ask a grown-up" check before anything leaves the app. */}
+          <ParentalGateHost />
           <AppShell>{children}</AppShell>
         </ThemeProvider>
       </body>

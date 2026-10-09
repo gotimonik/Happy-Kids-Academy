@@ -9,13 +9,15 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "cap:sync": "npm run build && npx cap sync android",
-    "cap:open:android": "npx cap open android"
+    "cap:sync": "npm run build && npx cap sync android && npx cap sync ios",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.2",
     "@capacitor/app": "^8.0.2",
     "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
     "@capacitor/filesystem": "^8.0.2",
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.2",

@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["8A8JG3NNKM.com.happykids.academy"],
+        "components": [{ "/": "/*" }]
+      }
+    ]
+  }
+}

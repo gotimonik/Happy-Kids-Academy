@@ -202,6 +202,38 @@
     background-attachment: fixed;
   }
 
+  /* App-like touch behavior everywhere (native apps and the website):
+     - No text selection / iOS long-press callout (copy, look up, share
+       sheet on images) — a stray long press on a tile or flash card
+       shouldn't pop up selection handles or a magnifier for a child.
+     - No image dragging (desktop "ghost image" drag of tiles/banner).
+     Form fields stay selectable/editable below. */
+  html {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    /* `manipulation` = pan + pinch only: turns off double-tap-to-zoom
+       (and the ~300ms tap delay that comes with it). Pinch zoom is
+       already capped by the viewport (`maximumScale: 1`,
+       `userScalable: false` in layout.tsx). Elements that set
+       `touch-action: none` (drawing/tracing canvas, drag pieces) still
+       get it, since the effective value is the intersection. */
+    touch-action: manipulation;
+  }
+
+  img {
+    -webkit-user-drag: none;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable]:not([contenteditable="false"]) {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
   html {
     scroll-behavior: smooth;
     /* Every in-app navigation is a full page load (static export served

@@ -29,7 +29,7 @@ function DrawingDialog({ drawing, onClose }: { drawing: SavedDrawing; onClose: (
   async function handleSaveToDevice() {
     setSaveState("saving");
     const ok = await saveImageToDevice(drawing.dataUrl, `my-drawing-${drawing.id}.png`);
-    setSaveState(ok ? "saved" : "error");
+    setSaveState(ok === null ? "idle" : ok ? "saved" : "error");
   }
 
   return (

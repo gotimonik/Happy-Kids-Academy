@@ -1,80 +1,56 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { DailyChallengeBadge } from "@/components/shared/daily-challenge-badge";
 import { LevelBadge } from "@/components/shared/level-badge";
-import { Skeleton } from "@/components/shared/skeleton-card";
 import { StreakFlameBadge } from "@/components/shared/streak-flame-badge";
-import { useTranslation } from "@/lib/i18n/use-translation";
-import { heroGradient } from "@/lib/ui/tile-gradient";
+
+/** Intrinsic size of the banner artwork (`public/images/banner-*.webp`,
+ * resized from `public/images/produce/banner.png`). Passed as the `<img>`'s
+ * width/height so the browser reserves the right-shaped box before the
+ * image loads and the category grid below doesn't jump down. */
+const BANNER_WIDTH = 1794;
+const BANNER_HEIGHT = 877;
 
 /**
- * Keeps the real hero's gradient background (plain inline style, no
- * hydration dependency) but stands in for the title/tagline/badge with
- * pulsing bars — the section's `framer-motion` entrance (`initial={{
- * opacity: 0 }}`) renders that invisible starting state inline in the
- * statically-exported HTML, so without this the whole hero would sit blank
- * until React hydrates and starts the animation.
+ * Home page hero: the Happy Kids Academy brand banner, with the child's
+ * level / streak / daily-challenge badges in a row underneath.
+ *
+ * Rendered statically (no client-only gating or entrance animation), so the
+ * banner is in the exported HTML and paints immediately — on the web and in
+ * the native apps alike. The badges read persisted progress and already
+ * render their own pulsing placeholders until the store hydrates.
+ *
+ * The banner's lettering is artwork, so the page's `<h1>` stays in the DOM
+ * for screen readers and SEO, visually hidden, and the image's `alt`
+ * carries what the artwork says.
  */
-function HomeHeroSkeleton() {
-  return (
-    <div
-      aria-busy="true"
-      aria-label="Loading"
-      className="relative overflow-hidden rounded-3xl p-6 shadow-lg sm:p-8"
-      style={heroGradient()}
-    >
-      <Skeleton className="h-7 w-52 rounded-full bg-white/30 sm:h-8 sm:w-64" />
-      <Skeleton className="mt-3 h-4 w-36 rounded-full bg-white/25" />
-      <div className="mt-4 flex gap-2">
-        <Skeleton className="h-8 w-24 rounded-full bg-white/30" />
-        <Skeleton className="h-8 w-24 rounded-full bg-white/30" />
-        <Skeleton className="h-8 w-24 rounded-full bg-white/30" />
-      </div>
-    </div>
-  );
-}
-
 export function HomeHero() {
-  const [mounted, setMounted] = useState(false);
-  const t = useTranslation();
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <HomeHeroSkeleton />;
-
   return (
-    <motion.section
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="relative overflow-hidden rounded-3xl p-6 text-white shadow-lg sm:p-8"
-      style={heroGradient()}
-    >
-      <span
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-1/2 rounded-t-3xl bg-gradient-to-b from-white/20 to-transparent"
-      />
-      <span aria-hidden="true" className="absolute -right-10 -top-14 size-44 rounded-full bg-white/10" />
-      <span aria-hidden="true" className="absolute -left-10 -bottom-16 size-40 rounded-full bg-black/10 blur-md" />
-      <span
-        aria-hidden="true"
-        className="animate-float absolute right-6 top-4 text-4xl drop-shadow-sm sm:right-10 sm:top-6 sm:text-5xl"
-      >
-        🎈
-      </span>
-
-      <h1 className="relative font-display text-2xl font-bold sm:text-3xl">Happy Kids Academy</h1>
-      <p className="relative mt-1 text-sm text-white/85 sm:text-base">{t("home.tagline")}</p>
-      <div className="relative mt-4 flex flex-wrap gap-2">
+    <section aria-labelledby="home-hero-title" className="flex flex-col gap-3">
+      <h1 id="home-hero-title" className="sr-only">
+        Happy Kids Academy
+      </h1>
+      <div className="overflow-hidden rounded-3xl bg-[#BDE3F7] shadow-lg">
+        {/* Plain <img>: `output: "export"` has no image optimizer, so
+            next/image would add nothing here; srcSet does the sizing. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/banner-1794.webp"
+          srcSet="/images/banner-900.webp 900w, /images/banner-1794.webp 1794w"
+          // Content column width: full width minus page padding on phones; minus
+          // padding + SideNav (14rem) + gap from `md`; capped by max-w-6xl.
+          sizes="(min-width: 1152px) 840px, (min-width: 768px) calc(100vw - 19.5rem), calc(100vw - 2rem)"
+          width={BANNER_WIDTH}
+          height={BANNER_HEIGHT}
+          alt="Happy Kids Academy — Learn, play and grow every day! Alphabet and phonics, numbers and counting, colors and shapes, animals and words, puzzles and games. Fun and interactive learning for kids."
+          fetchPriority="high"
+          decoding="async"
+          className="block h-auto w-full"
+        />
+      </div>
+      <div className="flex flex-wrap gap-2">
         <LevelBadge />
         <StreakFlameBadge />
         <DailyChallengeBadge />
       </div>
-    </motion.section>
+    </section>
   );
 }

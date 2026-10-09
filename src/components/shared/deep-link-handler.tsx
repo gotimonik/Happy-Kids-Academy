@@ -3,11 +3,15 @@
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App, type URLOpenListenerEvent } from "@capacitor/app";
-import { isCurrentLocation, toNativeStaticHref } from "@/components/shared/static-link";
+import {
+  isCurrentLocation,
+  toNativeStaticHref,
+  useRecoverExtensionlessUrl,
+} from "@/components/shared/static-link";
 
 /**
- * Turns an incoming `https://` URL (an Android App Link tap, or the iOS
- * Universal Link equivalent if this app ever ships on iOS) into an in-app
+ * Turns an incoming `https://` URL (an Android App Link or iOS Universal
+ * Link tap) into an in-app
  * navigation, using the exact same extensionless-route → `.html` rule
  * `StaticLink` uses for every other native navigation in this app.
  *
@@ -44,7 +48,9 @@ function navigateToIncomingUrl(rawUrl: string) {
 
 /**
  * Makes the Android App Link declared in `android/app/src/main/AndroidManifest.xml`
- * (verified via `public/.well-known/assetlinks.json`) actually take the child
+ * (verified via `public/.well-known/assetlinks.json`) and the iOS Universal Link
+ * declared in `ios/App/App/App.entitlements` (verified via
+ * `public/.well-known/apple-app-site-association`) actually take the child
  * to the right screen when a shared link — e.g. the "Share my progress" link
  * on the Rewards page — is opened and this app is already installed, instead
  * of just bringing the app to the foreground on whatever screen it already
@@ -62,6 +68,10 @@ function navigateToIncomingUrl(rawUrl: string) {
  * a platform-level (Android/iOS), not a webpage-level, concern.
  */
 export function DeepLinkHandler() {
+  // Mounted once at the root layout, so this also catches an iOS WebView
+  // reload at an extensionless client-side route (see the hook's docs).
+  useRecoverExtensionlessUrl();
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 

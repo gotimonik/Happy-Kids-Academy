@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy-policy" },
 };
 
-const LAST_UPDATED = "July 30, 2026";
+const LAST_UPDATED = "October 9, 2026";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -59,6 +59,10 @@ export default function PrivacyPolicyPage() {
 
         <section>
           <h2>Anonymous usage analytics</h2>
+          <p>
+            <strong>The iPhone and iPad app does not use any analytics</strong> and collects no data
+            at all. The paragraphs below apply only to the website and the Android app.
+          </p>
           <p>
             We use Google Analytics to understand, in aggregate, which pages and games are used and
             how often — this helps us decide what to improve next. Analytics data is tied to an

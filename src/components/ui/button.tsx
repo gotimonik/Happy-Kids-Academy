@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes, CSSProperties } from "react";
+import { isLight, isVeryDark } from "@/lib/ui/color";
 import { cn } from "@/lib/utils";
 
 /**
@@ -91,7 +92,19 @@ export function Button({
   const Comp = asChild ? Slot : "button";
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        buttonVariants({ variant, size }),
+        // A recolored face needs its own text color: the variant's
+        // `*-foreground` is tuned for the theme color it replaced, and in
+        // dark mode those foregrounds are *dark* (e.g. primary's), which
+        // left dark text on a saturated category color. White reads on
+        // every category color except the palest, which get dark text.
+        accentColor && (isLight(accentColor) ? "text-slate-900" : "text-white"),
+        // A near-black accent (Vehicles' charcoal) would melt into the
+        // dark-mode card; a faint light ring keeps the button's edge visible.
+        accentColor && isVeryDark(accentColor) && "dark:ring-1 dark:ring-white/25",
+        className,
+      )}
       style={
         accentColor
           ? ({ ...style, backgroundColor: accentColor, "--btn-accent": accentColor } as CSSProperties)
