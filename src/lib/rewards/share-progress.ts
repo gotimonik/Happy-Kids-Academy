@@ -14,9 +14,15 @@ export function buildProgressUrl(data: ProgressShareData): string {
   return `${SITE_URL}${buildProgressPath(data)}`;
 }
 
-/** Caption sent with the progress-card image. */
+/**
+ * Caption sent with the progress-card image, ending with the app's link.
+ * The link is part of the text (not a separate `url`) on purpose: given an
+ * image *and* a url, some share targets (e.g. WhatsApp) keep only the link
+ * preview and drop the image. On a device with the app installed the link
+ * opens the app (Universal Link / App Link); elsewhere, the website.
+ */
 export function shareMessage(data: ProgressShareData): string {
-  return `I've earned ${data.stars} ⭐ and reached Level ${data.level} on Happy Kids Academy! Come learn and play with me — it's free, works offline, and there are no ads or accounts.`;
+  return `I've earned ${data.stars} ⭐ and reached Level ${data.level} on Happy Kids Academy! Come learn and play with me — it's free, works offline, and there are no ads or accounts.\n${SITE_URL}`;
 }
 
 /** Fallback text when no image can be shared: the message plus a link to the public progress page. */
@@ -37,7 +43,7 @@ function isCancel(error: unknown): boolean {
 /**
  * Shares the child's progress as an IMAGE — the progress card from
  * `renderProgressCard` (logo, level, stars, coins, badges, lessons) — with a
- * short invite message as its caption. No link is sent with it.
+ * short invite message and the app's link as its caption.
  *
  * `card` should be rendered ahead of time (`ShareProgressButton` does this
  * when it mounts): on the web, `navigator.share` only works while the tap
